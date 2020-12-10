@@ -15,6 +15,7 @@ func indexHander(store state.Store) {
 }
 
 func main() {
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.Handle("/", log.MakeHander(indexHander))
 
 	logger.Printf("Server started: <http://127.0.0.1:9000>\n")
