@@ -1,10 +1,11 @@
 package main
 
 import (
-	"log"
+	logger "log"
 	"net/http"
 	"time"
 
+	"github.com/whoisnian/share-Go/pkg/log"
 	"github.com/whoisnian/share-Go/pkg/state"
 )
 
@@ -14,8 +15,8 @@ func indexHander(store state.Store) {
 }
 
 func main() {
-	http.Handle("/", state.MakeHander(indexHander))
+	http.Handle("/", log.MakeHander(indexHander))
 
-	log.Printf("Server started: <http://127.0.0.1:9000>\n")
+	logger.Printf("Server started: <http://127.0.0.1:9000>\n")
 	http.ListenAndServe("127.0.0.1:9000", nil)
 }
