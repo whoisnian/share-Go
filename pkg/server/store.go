@@ -29,14 +29,20 @@ func MakeHander(fn func(store Store)) http.HandlerFunc {
 		start := time.Now()
 		store := Store{&statusResponseWriter{w, http.StatusOK}, r}
 
-		fn(store)
+		defer func() {
+			if err := recover(); err != nil {
+				store.Error500("Internal Server Error")
+			}
 
-		log.Printf("%s [%d] %s %s %s %d",
-			r.RemoteAddr[0:strings.IndexByte(r.RemoteAddr, ':')],
-			store.w.status,
-			r.Method,
-			r.URL.Path,
-			r.UserAgent(),
-			time.Now().Sub(start).Milliseconds())
+			log.Printf("%s [%d] %s %s %s %d",
+				r.RemoteAddr[0:strings.IndexByte(r.RemoteAddr, ':')],
+				store.w.status,
+				r.Method,
+				r.URL.Path,
+				r.UserAgent(),
+				time.Now().Sub(start).Milliseconds())
+		}()
+
+		fn(store)
 	}
 }
