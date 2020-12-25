@@ -1,0 +1,9 @@
+# Ignore vscode
+.vscode
+
+# Ignore binary
+main
+share-Go
+
+# Ignore config
+config.json
