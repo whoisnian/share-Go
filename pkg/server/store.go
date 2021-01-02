@@ -41,6 +41,11 @@ func (store Store) MultipartReader() (*multipart.Reader, error) {
 	return store.r.MultipartReader()
 }
 
+// WriteHeader ...
+func (store Store) WriteHeader(code int) {
+	store.w.WriteHeader(code)
+}
+
 // Respond200 ...
 func (store Store) Respond200(content []byte) error {
 	store.w.WriteHeader(http.StatusOK)

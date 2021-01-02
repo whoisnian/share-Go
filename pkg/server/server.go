@@ -27,7 +27,7 @@ var methodList = map[string]string{
 
 type nodeData struct {
 	route         string
-	handler       http.Handler
+	handler       func(Store)
 	paramNameList []string
 }
 
@@ -99,25 +99,40 @@ type serveMux struct {
 }
 
 func (mux *serveMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	store := Store{&statusResponseWriter{w, http.StatusOK}, r}
+
+	defer func() {
+		if err := recover(); err != nil {
+			store.Error500("Internal Server Error")
+		}
+
+		log.Printf("%s [%d] %s %s %s %d",
+			r.RemoteAddr[0:strings.IndexByte(r.RemoteAddr, ':')],
+			store.w.status,
+			r.Method,
+			r.URL.Path,
+			r.UserAgent(),
+			time.Now().Sub(start).Milliseconds())
+	}()
+
 	methodTag, ok := methodList[r.Method]
 	if !ok {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		store.Respond404()
 		return
 	}
 	node, _ := findRoute(mux.root, r.RequestURI)
 	if node == nil {
-		w.WriteHeader(http.StatusNotFound)
+		store.Respond404()
 		return
 	}
 
-	if res, ok := node.next[methodTag]; ok {
-		data := res.data
-		if data == nil {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-		data.handler.ServeHTTP(w, r)
+	res, ok := node.next[methodTag]
+	if !ok {
+		store.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
+	res.data.handler(store)
 }
 
 var mux *serveMux
@@ -125,29 +140,6 @@ var mux *serveMux
 func init() {
 	mux = new(serveMux)
 	mux.root = new(routeNode)
-}
-
-func makeHander(fn func(Store)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		store := Store{&statusResponseWriter{w, http.StatusOK}, r}
-
-		defer func() {
-			if err := recover(); err != nil {
-				store.Error500("Internal Server Error")
-			}
-
-			log.Printf("%s [%d] %s %s %s %d",
-				r.RemoteAddr[0:strings.IndexByte(r.RemoteAddr, ':')],
-				store.w.status,
-				r.Method,
-				r.URL.Path,
-				r.UserAgent(),
-				time.Now().Sub(start).Milliseconds())
-		}()
-
-		fn(store)
-	}
 }
 
 // Handle ...
@@ -160,7 +152,7 @@ func Handle(route string, method string, handler func(Store)) {
 	if _, ok = node.next[methodTag]; ok {
 		log.Panicf("Duplicate method '%s' for route: '%s'", method, route)
 	}
-	node.nextNode(methodTag).data = &nodeData{route, makeHander(handler), paramNameList}
+	node.nextNode(methodTag).data = &nodeData{route, handler, paramNameList}
 }
 
 // Start ...
