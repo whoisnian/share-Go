@@ -2,11 +2,9 @@ package main
 
 import (
 	"flag"
-	"log"
-	"net/http"
 
 	"github.com/whoisnian/share-Go/internal/config"
-	"github.com/whoisnian/share-Go/internal/handler"
+	_ "github.com/whoisnian/share-Go/internal/router"
 	"github.com/whoisnian/share-Go/pkg/server"
 )
 
@@ -18,10 +16,5 @@ func main() {
 	flag.Parse()
 	CONFIG = config.Load(*configFilePath)
 
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	http.Handle("/upload", server.MakeHander(handler.UploadHandler))
-	http.Handle("/", server.MakeHander(handler.IndexHander))
-
-	log.Printf("Server started: <http://%s>\n", CONFIG.ListenAddr)
-	http.ListenAndServe(CONFIG.ListenAddr, nil)
+	server.Start(CONFIG.ListenAddr)
 }
