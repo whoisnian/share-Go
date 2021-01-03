@@ -9,7 +9,7 @@ import (
 	"github.com/whoisnian/share-Go/pkg/server"
 )
 
-// UploadHandler ...
+// UploadHandler saves received files to specified directory.
 func UploadHandler(store server.Store) {
 	reader, err := store.MultipartReader()
 	if err != nil {

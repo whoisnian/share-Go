@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-// ListenAddr ...
+// ListenAddr example: `127.0.0.1:9000`.
 var ListenAddr string
 
 var configInstance = &struct {

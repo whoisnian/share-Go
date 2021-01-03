@@ -16,13 +16,13 @@ func (w *statusResponseWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
-// Store consists of both request and responseWriter
+// Store consists of both request and responseWriter.
 type Store struct {
 	w *statusResponseWriter
 	r *http.Request
 }
 
-// CookieValue ...
+// CookieValue returns the value of specified cookie, or empty string if cookie not found.
 func (store Store) CookieValue(name string) string {
 	cookie, err := store.r.Cookie(name)
 	if err != nil {
@@ -31,22 +31,22 @@ func (store Store) CookieValue(name string) string {
 	return cookie.Value
 }
 
-// URL ...
+// URL equals to `http.Request.URL`.
 func (store Store) URL() *url.URL {
 	return store.r.URL
 }
 
-// MultipartReader ...
+// MultipartReader equals to `http.Request.MultipartReader()`.
 func (store Store) MultipartReader() (*multipart.Reader, error) {
 	return store.r.MultipartReader()
 }
 
-// WriteHeader ...
+// WriteHeader equals to `http.ResponseWriter.WriteHeader()`.
 func (store Store) WriteHeader(code int) {
 	store.w.WriteHeader(code)
 }
 
-// Respond200 ...
+// Respond200 replies 200 to client request with optional body.
 func (store Store) Respond200(content []byte) error {
 	store.w.WriteHeader(http.StatusOK)
 	if len(content) > 0 {
@@ -56,27 +56,17 @@ func (store Store) Respond200(content []byte) error {
 	return nil
 }
 
-// Redirect ...
+// Redirect is similar to `http.Redirect()`.
 func (store Store) Redirect(url string, code int) {
 	http.Redirect(store.w, store.r, url, code)
 }
 
-// Redirect301 ...
-func (store Store) Redirect301(url string) {
-	store.Redirect(url, http.StatusMovedPermanently)
-}
-
-// Redirect302 ...
-func (store Store) Redirect302(url string) {
-	store.Redirect(url, http.StatusFound)
-}
-
-// Respond404 ...
+// Respond404 is similar to `http.NotFound()`.
 func (store Store) Respond404() {
 	http.NotFound(store.w, store.r)
 }
 
-// Error500 ...
+// Error500 is similar to `http.Error()`.
 func (store Store) Error500(err string) {
 	http.Error(store.w, err, http.StatusInternalServerError)
 }

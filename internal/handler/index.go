@@ -4,7 +4,7 @@ import (
 	"github.com/whoisnian/share-Go/pkg/server"
 )
 
-// IndexHander ...
+// IndexHander shows a simple form to upload files.
 func IndexHander(store server.Store) {
 	page := `<!DOCTYPE html>
 <html>

@@ -142,7 +142,7 @@ func init() {
 	mux.root = new(routeNode)
 }
 
-// Handle ...
+// Handle registers the handler for the given route.
 func Handle(route string, method string, handler func(Store)) {
 	node, paramNameList := parseRoute(mux.root, route)
 	methodTag, ok := methodList[method]
@@ -155,7 +155,7 @@ func Handle(route string, method string, handler func(Store)) {
 	node.nextNode(methodTag).data = &nodeData{route, handler, paramNameList}
 }
 
-// Start ...
+// Start listens on the addr and then creates goroutine to handle each request.
 func Start(addr string) {
 	log.Printf("Server started: <http://%s>\n", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {
