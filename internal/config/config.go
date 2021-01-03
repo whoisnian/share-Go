@@ -2,19 +2,30 @@ package config
 
 import (
 	"encoding/json"
+	"flag"
 	"io/ioutil"
 	"log"
 	"os"
 )
 
-// Config ...
-type Config struct {
-	ListenAddr string
+// ListenAddr ...
+var ListenAddr string
+
+var configInstance = &struct {
+	ListenAddr *string
+}{
+	&ListenAddr,
 }
 
-// Load ...
-func Load(path string) *Config {
-	fi, err := os.Open(path)
+var configFilePath = flag.String("c", "config.json", "Specify a path to a custom config file")
+
+func init() {
+	flag.Parse()
+	loadFromJSON()
+}
+
+func loadFromJSON() {
+	fi, err := os.Open(*configFilePath)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -25,23 +36,20 @@ func Load(path string) *Config {
 		log.Panicln(err)
 	}
 
-	config := new(Config)
-	err = json.Unmarshal(content, config)
+	err = json.Unmarshal(content, configInstance)
 	if err != nil {
 		log.Panicln(err)
 	}
-	return config
 }
 
-// Save ...
-func Save(path string, config *Config) {
-	fi, err := os.OpenFile(path, os.O_WRONLY, 0)
+func saveAsJSON() {
+	fi, err := os.OpenFile(*configFilePath, os.O_WRONLY, 0)
 	if err != nil {
 		log.Panicln(err)
 	}
 	defer fi.Close()
 
-	content, err := json.MarshalIndent(*config, "", "  ")
+	content, err := json.MarshalIndent(configInstance, "", "  ")
 	if err != nil {
 		log.Panicln(err)
 	}
