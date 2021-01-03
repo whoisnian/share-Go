@@ -121,7 +121,7 @@ func (mux *serveMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		store.Respond404()
 		return
 	}
-	node, _ := findRoute(mux.root, r.RequestURI)
+	node, _ := findRoute(mux.root, r.URL.EscapedPath())
 	if node == nil {
 		store.Respond404()
 		return
