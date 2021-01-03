@@ -20,15 +20,23 @@ func (w *statusResponseWriter) WriteHeader(code int) {
 type Store struct {
 	w *statusResponseWriter
 	r *http.Request
+	m map[string]string
+}
+
+// RouteParam returns the value of specified route param, or empty string if param not found.
+func (store Store) RouteParam(name string) string {
+	if param, ok := store.m[name]; ok {
+		return param
+	}
+	return ""
 }
 
 // CookieValue returns the value of specified cookie, or empty string if cookie not found.
 func (store Store) CookieValue(name string) string {
-	cookie, err := store.r.Cookie(name)
-	if err != nil {
-		return ""
+	if cookie, err := store.r.Cookie(name); err == nil {
+		return cookie.Value
 	}
-	return cookie.Value
+	return ""
 }
 
 // URL equals to `http.Request.URL`.

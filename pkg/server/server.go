@@ -100,7 +100,7 @@ type serveMux struct {
 
 func (mux *serveMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	store := Store{&statusResponseWriter{w, http.StatusOK}, r}
+	store := Store{&statusResponseWriter{w, http.StatusOK}, r, make(map[string]string)}
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -121,7 +121,7 @@ func (mux *serveMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		store.Respond404()
 		return
 	}
-	node, _ := findRoute(mux.root, r.URL.EscapedPath())
+	node, paramValueList := findRoute(mux.root, r.URL.EscapedPath())
 	if node == nil {
 		store.Respond404()
 		return
@@ -129,9 +129,14 @@ func (mux *serveMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	res, ok := node.next[methodTag]
 	if !ok {
-		store.WriteHeader(http.StatusMethodNotAllowed)
+		store.Respond404()
 		return
 	}
+
+	for index, paramName := range res.data.paramNameList {
+		store.m[paramName] = paramValueList[index]
+	}
+
 	res.data.handler(store)
 }
 
@@ -144,6 +149,9 @@ func init() {
 
 // Handle registers the handler for the given route.
 func Handle(route string, method string, handler func(Store)) {
+	mux.mu.Lock()
+	defer mux.mu.Unlock()
+
 	node, paramNameList := parseRoute(mux.root, route)
 	methodTag, ok := methodList[method]
 	if !ok {
