@@ -11,10 +11,15 @@ import (
 // ListenAddr example: `127.0.0.1:9000`.
 var ListenAddr string
 
+// FTPListenAddr example: `127.0.0.1:2121`.
+var FTPListenAddr string
+
 var configInstance = &struct {
-	ListenAddr *string
+	ListenAddr    *string
+	FTPListenAddr *string
 }{
 	&ListenAddr,
+	&FTPListenAddr,
 }
 
 var configFilePath = flag.String("c", "config.json", "Specify a path to a custom config file")
