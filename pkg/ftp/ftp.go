@@ -31,8 +31,10 @@ func Start(addr string) {
 			log.Panic(err)
 		}
 		go handleConn(&ftpConn{
+			conn,
 			bufio.NewWriter(conn),
 			bufio.NewReader(conn),
+			nil,
 		})
 	}
 }

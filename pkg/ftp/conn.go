@@ -2,13 +2,16 @@ package ftp
 
 import (
 	"bufio"
+	"net"
 	"strconv"
 	"strings"
 )
 
 type ftpConn struct {
-	ctrlW *bufio.Writer
-	ctrlR *bufio.Reader
+	ctrlConn net.Conn
+	ctrlW    *bufio.Writer
+	ctrlR    *bufio.Reader
+	dataConn net.Conn
 }
 
 func (conn *ftpConn) writeMessage(code int, message string) {
