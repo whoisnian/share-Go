@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"github.com/whoisnian/share-Go/pkg/server"
+	"github.com/whoisnian/share-Go/pkg/httpd"
 )
 
 // IndexHander shows a simple form to upload files.
-func IndexHander(store server.Store) {
+func IndexHander(store httpd.Store) {
 	page := `<!DOCTYPE html>
 <html>
 	<head>

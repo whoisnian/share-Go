@@ -6,11 +6,11 @@ import (
 	"os"
 	"path"
 
-	"github.com/whoisnian/share-Go/pkg/server"
+	"github.com/whoisnian/share-Go/pkg/httpd"
 )
 
 // UploadHandler saves received files to specified directory.
-func UploadHandler(store server.Store) {
+func UploadHandler(store httpd.Store) {
 	reader, err := store.MultipartReader()
 	if err != nil {
 		log.Panic(err)

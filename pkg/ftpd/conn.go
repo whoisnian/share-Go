@@ -1,4 +1,4 @@
-package ftp
+package ftpd
 
 import (
 	"bufio"

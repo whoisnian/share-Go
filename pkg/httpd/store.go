@@ -1,4 +1,4 @@
-package server
+package httpd
 
 import (
 	"mime/multipart"
@@ -16,7 +16,7 @@ func (w *statusResponseWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
-// Store consists of both request and responseWriter.
+// Store consists of request, routeParams and responseWriter.
 type Store struct {
 	w *statusResponseWriter
 	r *http.Request

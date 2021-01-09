@@ -1,4 +1,4 @@
-package server
+package httpd
 
 import (
 	"log"
@@ -152,11 +152,12 @@ func Handle(route string, method string, handler func(Store)) {
 	mux.mu.Lock()
 	defer mux.mu.Unlock()
 
-	node, paramNameList := parseRoute(mux.root, route)
 	methodTag, ok := methodList[method]
 	if !ok {
 		log.Panicf("Invalid method '%s' for route: '%s'", method, route)
 	}
+
+	node, paramNameList := parseRoute(mux.root, route)
 	if _, ok = node.next[methodTag]; ok {
 		log.Panicf("Duplicate method '%s' for route: '%s'", method, route)
 	}
@@ -165,7 +166,7 @@ func Handle(route string, method string, handler func(Store)) {
 
 // Start listens on the addr and then creates goroutine to handle each request.
 func Start(addr string) {
-	log.Printf("Server started: <http://%s>\n", addr)
+	log.Printf("Service httpd started: <http://%s>\n", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Panic(err)
 	}
