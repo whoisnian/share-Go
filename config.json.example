@@ -1,4 +1,4 @@
 {
-  "ListenAddr": "127.0.0.1:9000",
+  "HTTPListenAddr": "127.0.0.1:9000",
   "FTPListenAddr": "127.0.0.1:2121"
 }

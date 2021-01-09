@@ -8,17 +8,17 @@ import (
 	"os"
 )
 
-// ListenAddr example: `127.0.0.1:9000`.
-var ListenAddr string
+// HTTPListenAddr example: `127.0.0.1:9000`.
+var HTTPListenAddr string
 
 // FTPListenAddr example: `127.0.0.1:2121`.
 var FTPListenAddr string
 
 var configInstance = &struct {
-	ListenAddr    *string
-	FTPListenAddr *string
+	HTTPListenAddr *string
+	FTPListenAddr  *string
 }{
-	&ListenAddr,
+	&HTTPListenAddr,
 	&FTPListenAddr,
 }
 
