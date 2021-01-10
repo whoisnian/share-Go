@@ -3,6 +3,7 @@ package ftpd
 import (
 	"bufio"
 	"net"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -12,6 +13,17 @@ type ftpConn struct {
 	ctrlW    *bufio.Writer
 	ctrlR    *bufio.Reader
 	dataConn net.Conn
+	curDir   string
+}
+
+func newftpConn(conn net.Conn) *ftpConn {
+	return &ftpConn{
+		ctrlConn: conn,
+		ctrlW:    bufio.NewWriter(conn),
+		ctrlR:    bufio.NewReader(conn),
+		dataConn: nil,
+		curDir:   "/",
+	}
 }
 
 func (conn *ftpConn) writeMessage(code int, message string) {
@@ -22,12 +34,12 @@ func (conn *ftpConn) writeMessage(code int, message string) {
 
 func (conn *ftpConn) receiveLine(line string) {
 	command, param := conn.parseLine(line)
-	commandFunc := commandMap[strings.ToUpper(command)]
-	if commandFunc == nil {
+	if commandFunc, ok := commandMap[strings.ToUpper(command)]; ok {
+		commandFunc(conn, param)
+	} else {
 		conn.writeMessage(502, "Command not implemented")
 		return
 	}
-	commandFunc(conn, param)
 }
 
 func (conn *ftpConn) parseLine(line string) (string, string) {
@@ -36,4 +48,21 @@ func (conn *ftpConn) parseLine(line string) (string, string) {
 		return params[0], ""
 	}
 	return params[0], strings.TrimSpace(params[1])
+}
+
+func (conn *ftpConn) changeDir(path string) {
+	if len(path) < 1 {
+		conn.curDir = "/"
+	} else if filepath.IsAbs(path) {
+		conn.curDir = path
+	} else {
+		conn.curDir = filepath.Join(conn.curDir, path)
+	}
+}
+
+func (conn *ftpConn) buildPath(path string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+	return filepath.Join(conn.curDir, path)
 }

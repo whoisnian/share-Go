@@ -1,10 +1,13 @@
 package ftpd
 
 import (
-	"bufio"
 	"log"
 	"net"
+
+	"github.com/whoisnian/share-Go/pkg/storage"
 )
+
+var fsStore *storage.Store
 
 func handleConn(conn *ftpConn) {
 	conn.writeMessage(220, "share-GO")
@@ -19,8 +22,10 @@ func handleConn(conn *ftpConn) {
 }
 
 // Start listens on the addr and then creates goroutine to handle each connection.
-func Start(addr string) {
-	log.Printf("FTP server started: <ftp://%s>\n", addr)
+func Start(addr string, rootPath string) {
+	fsStore = storage.New(rootPath)
+
+	log.Printf("Service ftpd started: <ftp://%s>\n", addr)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Panic(err)
@@ -30,11 +35,6 @@ func Start(addr string) {
 		if err != nil {
 			log.Panic(err)
 		}
-		go handleConn(&ftpConn{
-			conn,
-			bufio.NewWriter(conn),
-			bufio.NewReader(conn),
-			nil,
-		})
+		go handleConn(newftpConn(conn))
 	}
 }

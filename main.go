@@ -11,8 +11,8 @@ import (
 )
 
 func main() {
-	go ftpd.Start(config.FTPListenAddr)
-	go httpd.Start(config.ListenAddr)
+	go ftpd.Start(config.FTPListenAddr, config.RootPath)
+	go httpd.Start(config.HTTPListenAddr)
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)

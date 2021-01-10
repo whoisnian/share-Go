@@ -14,12 +14,17 @@ var HTTPListenAddr string
 // FTPListenAddr example: `127.0.0.1:2121`.
 var FTPListenAddr string
 
+// RootPath example: `/srv/share`
+var RootPath string
+
 var configInstance = &struct {
 	HTTPListenAddr *string
 	FTPListenAddr  *string
+	RootPath       *string
 }{
 	&HTTPListenAddr,
 	&FTPListenAddr,
+	&RootPath,
 }
 
 var configFilePath = flag.String("c", "config.json", "Specify a path to a custom config file")
