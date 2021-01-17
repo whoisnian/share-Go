@@ -7,12 +7,37 @@ import (
 )
 
 var commandMap = map[string]func(*ftpConn, string){
+	"LIST": commandLIST,
 	"PASS": commandPASS,
 	"PASV": commandPASV,
 	"QUIT": commandQUIT,
 	"SYST": commandSYST,
 	"TYPE": commandTYPE,
 	"USER": commandUSER,
+}
+
+func commandLIST(conn *ftpConn, param string) {
+	if conn.dataConn == nil {
+		conn.writeMessage(425, "Error opening data socket")
+		return
+	}
+
+	fileInfos, err := fsStore.ListDir(conn.curDir)
+	if err != nil {
+		conn.writeMessage(550, err.Error())
+		return
+	}
+
+	conn.writeMessage(150, "Opening ASCII mode data connection for file list")
+	content := ""
+	for _, fileInfo := range fileInfos {
+		content += fileInfo.Mode().String() +
+			" 1 ftp ftp " +
+			" " + strconv.Itoa(int(fileInfo.Size())) + " " +
+			fileInfo.ModTime().Format(" Jan _2 15:04 ") +
+			fileInfo.Name() + "\r\n"
+	}
+	conn.sendByteData([]byte(content))
 }
 
 func commandPASS(conn *ftpConn, param string) {
@@ -30,7 +55,10 @@ func commandPASV(conn *ftpConn, param string) {
 		conn.writeMessage(425, "Data connection failed")
 		return
 	}
-	go func() { conn.dataConn, err = listener.Accept() }()
+	go func() {
+		conn.dataConn, _ = listener.Accept()
+		listener.Close()
+	}()
 
 	host, _, _ := net.SplitHostPort(conn.ctrlConn.LocalAddr().String())
 	_, port, _ := net.SplitHostPort(listener.Addr().String())

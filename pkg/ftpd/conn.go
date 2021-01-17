@@ -2,6 +2,7 @@ package ftpd
 
 import (
 	"bufio"
+	"io"
 	"net"
 	"path/filepath"
 	"strconv"
@@ -30,6 +31,32 @@ func (conn *ftpConn) writeMessage(code int, message string) {
 	content := strconv.Itoa(code) + " " + message + "\r\n"
 	conn.ctrlW.WriteString(content)
 	conn.ctrlW.Flush()
+}
+
+func (conn *ftpConn) sendByteData(data []byte) error {
+	defer func() {
+		conn.dataConn.Close()
+		conn.dataConn = nil
+	}()
+
+	if _, err := conn.dataConn.Write(data); err != nil {
+		return err
+	}
+	conn.writeMessage(226, "Data transmission OK")
+	return nil
+}
+
+func (conn *ftpConn) sendStreamData(reader io.ReadCloser) error {
+	defer func() {
+		conn.dataConn.Close()
+		conn.dataConn = nil
+	}()
+
+	if _, err := io.Copy(conn.dataConn, reader); err != nil {
+		return err
+	}
+	conn.writeMessage(226, "Data transmission OK")
+	return nil
 }
 
 func (conn *ftpConn) receiveLine(line string) {

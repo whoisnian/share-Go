@@ -16,7 +16,6 @@ func handleConn(conn *ftpConn) {
 		if err != nil {
 			break
 		}
-		log.Println(line)
 		conn.receiveLine(line)
 	}
 }
