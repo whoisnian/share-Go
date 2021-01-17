@@ -1,9 +1,10 @@
 package storage
 
 import (
-	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/whoisnian/share-Go/pkg/logger"
 )
 
 // Store ...
@@ -15,10 +16,10 @@ type Store struct {
 func New(path string) *Store {
 	base, err := filepath.Abs(path)
 	if err != nil {
-		log.Panicln(err)
+		logger.Panic(err)
 	}
 	if _, err := os.Lstat(base); os.IsNotExist(err) {
-		log.Panicln(err)
+		logger.Panic(err)
 	}
 	return &Store{base}
 }

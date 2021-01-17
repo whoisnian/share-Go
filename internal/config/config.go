@@ -4,9 +4,13 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
-	"log"
 	"os"
+
+	"github.com/whoisnian/share-Go/pkg/logger"
 )
+
+// Debug example: `true`.
+var Debug bool
 
 // HTTPListenAddr example: `127.0.0.1:9000`.
 var HTTPListenAddr string
@@ -14,14 +18,16 @@ var HTTPListenAddr string
 // FTPListenAddr example: `127.0.0.1:2121`.
 var FTPListenAddr string
 
-// RootPath example: `/srv/share`
+// RootPath example: `/srv/share`.
 var RootPath string
 
 var configInstance = &struct {
+	Debug          *bool
 	HTTPListenAddr *string
 	FTPListenAddr  *string
 	RootPath       *string
 }{
+	&Debug,
 	&HTTPListenAddr,
 	&FTPListenAddr,
 	&RootPath,
@@ -29,7 +35,8 @@ var configInstance = &struct {
 
 var configFilePath = flag.String("c", "config.json", "Specify a path to a custom config file")
 
-func init() {
+// Init load config options from specified json file.
+func Init() {
 	flag.Parse()
 	loadFromJSON()
 }
@@ -37,35 +44,35 @@ func init() {
 func loadFromJSON() {
 	fi, err := os.Open(*configFilePath)
 	if err != nil {
-		log.Panicln(err)
+		logger.Fatal(err)
 	}
 	defer fi.Close()
 
 	content, err := ioutil.ReadAll(fi)
 	if err != nil {
-		log.Panicln(err)
+		logger.Fatal(err)
 	}
 
 	err = json.Unmarshal(content, configInstance)
 	if err != nil {
-		log.Panicln(err)
+		logger.Fatal(err)
 	}
 }
 
 func saveAsJSON() {
 	fi, err := os.OpenFile(*configFilePath, os.O_WRONLY, 0)
 	if err != nil {
-		log.Panicln(err)
+		logger.Panic(err)
 	}
 	defer fi.Close()
 
 	content, err := json.MarshalIndent(configInstance, "", "  ")
 	if err != nil {
-		log.Panicln(err)
+		logger.Panic(err)
 	}
 
 	_, err = fi.Write(content)
 	if err != nil {
-		log.Panicln(err)
+		logger.Panic(err)
 	}
 }

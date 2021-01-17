@@ -2,18 +2,18 @@ package handler
 
 import (
 	"io"
-	"log"
 	"os"
 	"path"
 
 	"github.com/whoisnian/share-Go/pkg/httpd"
+	"github.com/whoisnian/share-Go/pkg/logger"
 )
 
 // UploadHandler saves received files to specified directory.
 func UploadHandler(store httpd.Store) {
 	reader, err := store.MultipartReader()
 	if err != nil {
-		log.Panic(err)
+		logger.Panic(err)
 	}
 	for {
 		part, err := reader.NextPart()
@@ -21,7 +21,7 @@ func UploadHandler(store httpd.Store) {
 			break
 		}
 		if err != nil {
-			log.Panic(err)
+			logger.Panic(err)
 		}
 		if part.FormName() != "fileList" {
 			continue
@@ -29,7 +29,7 @@ func UploadHandler(store httpd.Store) {
 
 		file, err := os.Create(path.Join("./uploads", part.FileName()))
 		if err != nil {
-			log.Panic(err)
+			logger.Panic(err)
 		}
 		defer file.Close()
 

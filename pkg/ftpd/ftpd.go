@@ -1,9 +1,9 @@
 package ftpd
 
 import (
-	"log"
 	"net"
 
+	"github.com/whoisnian/share-Go/pkg/logger"
 	"github.com/whoisnian/share-Go/pkg/storage"
 )
 
@@ -24,15 +24,15 @@ func handleConn(conn *ftpConn) {
 func Start(addr string, rootPath string) {
 	fsStore = storage.New(rootPath)
 
-	log.Printf("Service ftpd started: <ftp://%s>\n", addr)
+	logger.Info("Service ftpd started: <ftp://", addr, ">")
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Panic(err)
+		logger.Fatal(err)
 	}
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Panic(err)
+			logger.Panic(err)
 		}
 		go handleConn(newftpConn(conn))
 	}

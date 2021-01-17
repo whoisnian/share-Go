@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/whoisnian/share-Go/pkg/logger"
 )
 
 type ftpConn struct {
@@ -29,6 +31,7 @@ func newftpConn(conn net.Conn) *ftpConn {
 
 func (conn *ftpConn) writeMessage(code int, message string) {
 	content := strconv.Itoa(code) + " " + message + "\r\n"
+	logger.Debug(content)
 	conn.ctrlW.WriteString(content)
 	conn.ctrlW.Flush()
 }
@@ -60,6 +63,7 @@ func (conn *ftpConn) sendStreamData(reader io.ReadCloser) error {
 }
 
 func (conn *ftpConn) receiveLine(line string) {
+	logger.Debug(line)
 	command, param := conn.parseLine(line)
 	if commandFunc, ok := commandMap[strings.ToUpper(command)]; ok {
 		commandFunc(conn, param)

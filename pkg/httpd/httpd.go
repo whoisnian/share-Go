@@ -1,12 +1,12 @@
 package httpd
 
 import (
-	"log"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/whoisnian/share-Go/pkg/logger"
 	"github.com/whoisnian/share-Go/pkg/util"
 )
 
@@ -60,7 +60,7 @@ func parseRoute(node *routeNode, route string) (*routeNode, []string) {
 		} else if fragment[0] == ':' {
 			paramName := fragment[1:]
 			if paramName == "" || util.Contain(paramNameList, paramName) {
-				log.Panicf("Invalid fragment '%s' for route: '%s'", fragment, route)
+				logger.Fatal("Invalid fragment '", fragment, "' for route: '", route, "'")
 			}
 			paramNameList = append(paramNameList, paramName)
 			node = node.nextNode(routeParam)
@@ -107,13 +107,14 @@ func (mux *serveMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			store.Error500("Internal Server Error")
 		}
 
-		log.Printf("%s [%d] %s %s %s %d",
-			r.RemoteAddr[0:strings.IndexByte(r.RemoteAddr, ':')],
-			store.w.status,
-			r.Method,
-			r.URL.Path,
-			r.UserAgent(),
-			time.Now().Sub(start).Milliseconds())
+		logger.Info(
+			r.RemoteAddr[0:strings.IndexByte(r.RemoteAddr, ':')], " [",
+			store.w.status, "] ",
+			r.Method, " ",
+			r.URL.Path, " ",
+			r.UserAgent(), " ",
+			time.Now().Sub(start).Milliseconds(),
+		)
 	}()
 
 	methodTag, ok := methodList[r.Method]
@@ -154,20 +155,20 @@ func Handle(route string, method string, handler func(Store)) {
 
 	methodTag, ok := methodList[method]
 	if !ok {
-		log.Panicf("Invalid method '%s' for route: '%s'", method, route)
+		logger.Fatal("Invalid method '", method, "' for route: '", route, "'")
 	}
 
 	node, paramNameList := parseRoute(mux.root, route)
 	if _, ok = node.next[methodTag]; ok {
-		log.Panicf("Duplicate method '%s' for route: '%s'", method, route)
+		logger.Fatal("Duplicate method '", method, "' for route: '", route, "'")
 	}
 	node.nextNode(methodTag).data = &nodeData{route, handler, paramNameList}
 }
 
 // Start listens on the addr and then creates goroutine to handle each request.
 func Start(addr string) {
-	log.Printf("Service httpd started: <http://%s>\n", addr)
+	logger.Info("Service httpd started: <http://", addr, ">")
 	if err := http.ListenAndServe(addr, mux); err != nil {
-		log.Panic(err)
+		logger.Fatal(err)
 	}
 }

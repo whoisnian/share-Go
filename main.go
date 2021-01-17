@@ -8,9 +8,13 @@ import (
 	_ "github.com/whoisnian/share-Go/internal/router"
 	"github.com/whoisnian/share-Go/pkg/ftpd"
 	"github.com/whoisnian/share-Go/pkg/httpd"
+	"github.com/whoisnian/share-Go/pkg/logger"
 )
 
 func main() {
+	config.Init()
+	logger.SetDebug(config.Debug)
+
 	go ftpd.Start(config.FTPListenAddr, config.RootPath)
 	go httpd.Start(config.HTTPListenAddr)
 
