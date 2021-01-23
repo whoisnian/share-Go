@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/whoisnian/share-Go/pkg/util"
 )
 
 var commandMap = map[string]func(*ftpConn, string){
@@ -28,7 +30,14 @@ func commandLIST(conn *ftpConn, param string) {
 		return
 	}
 
-	fileInfos, err := fsStore.ListDir(conn.curDir)
+	i := 0
+	for ; i < len(param); i++ {
+		if (i == 0 || util.IsSpace(param[i-1])) && !util.IsSpace(param[i]) && param[i] != '-' {
+			break
+		}
+	}
+
+	fileInfos, err := fsStore.ListDir(conn.buildPath(param[i:]))
 	if err != nil {
 		conn.writeMessage(550, err.Error())
 		return
