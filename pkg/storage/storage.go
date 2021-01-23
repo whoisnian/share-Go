@@ -55,8 +55,13 @@ func (store *Store) ListDir(path string) ([]os.FileInfo, error) {
 	return dir.Readdir(-1)
 }
 
-// DeleteDir ...
-func (store *Store) DeleteDir(path string) error {
+// Delete ...
+func (store *Store) Delete(path string) error {
+	return os.Remove(filepath.Join(store.base, path))
+}
+
+// DeleteAll ...
+func (store *Store) DeleteAll(path string) error {
 	return os.RemoveAll(filepath.Join(store.base, path))
 }
 

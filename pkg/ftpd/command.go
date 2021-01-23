@@ -12,6 +12,7 @@ import (
 
 var commandMap = map[string]func(*ftpConn, string){
 	"CWD":  commandCWD,
+	"DELE": commandDELE,
 	"FEAT": commandFEAT,
 	"LIST": commandLIST,
 	"MDTM": commandMDTM,
@@ -20,6 +21,7 @@ var commandMap = map[string]func(*ftpConn, string){
 	"PWD":  commandPWD,
 	"QUIT": commandQUIT,
 	"RETR": commandRETR,
+	"RMD":  commandRMD,
 	"SIZE": commandSIZE,
 	"STOR": commandSTOR,
 	"SYST": commandSYST,
@@ -42,6 +44,28 @@ func commandCWD(conn *ftpConn, param string) {
 
 	conn.curDir = path
 	conn.writeMessage(250, "Change working directory successfully")
+}
+
+func commandDELE(conn *ftpConn, param string) {
+	path := strings.TrimSpace(param)
+	if len(path) < 1 {
+		conn.writeMessage(500, "Syntax error")
+		return
+	}
+	path = conn.buildPath(path)
+
+	if !fsStore.IsFile(path) {
+		conn.writeMessage(550, "No such file")
+		return
+	}
+
+	err := fsStore.Delete(path)
+	if err != nil {
+		conn.writeMessage(550, err.Error())
+		return
+	}
+
+	conn.writeMessage(250, "Delete file successfully")
 }
 
 func commandFEAT(conn *ftpConn, param string) {
@@ -196,6 +220,28 @@ func commandRETR(conn *ftpConn, param string) {
 
 	conn.writeMessage(150, "Sending file")
 	conn.sendStreamData(file)
+}
+
+func commandRMD(conn *ftpConn, param string) {
+	path := strings.TrimSpace(param)
+	if len(path) < 1 {
+		conn.writeMessage(500, "Syntax error")
+		return
+	}
+	path = conn.buildPath(path)
+
+	if !fsStore.IsDir(path) {
+		conn.writeMessage(550, "No such directory")
+		return
+	}
+
+	err := fsStore.Delete(path)
+	if err != nil {
+		conn.writeMessage(550, err.Error())
+		return
+	}
+
+	conn.writeMessage(250, "Delete directory successfully")
 }
 
 func commandSIZE(conn *ftpConn, param string) {
