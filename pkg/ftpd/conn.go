@@ -96,16 +96,6 @@ func (conn *ftpConn) parseLine(line string) (string, string) {
 	return params[0], strings.TrimSpace(params[1])
 }
 
-func (conn *ftpConn) changeDir(path string) {
-	if len(path) < 1 {
-		conn.curDir = "/"
-	} else if filepath.IsAbs(path) {
-		conn.curDir = path
-	} else {
-		conn.curDir = filepath.Join(conn.curDir, path)
-	}
-}
-
 func (conn *ftpConn) buildPath(path string) string {
 	if filepath.IsAbs(path) {
 		return path

@@ -3,6 +3,7 @@ package ftpd
 import (
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -11,15 +12,36 @@ import (
 )
 
 var commandMap = map[string]func(*ftpConn, string){
+	"CWD": commandCWD,
 	"LIST": commandLIST,
 	"PASS": commandPASS,
 	"PASV": commandPASV,
+	"PWD":  commandPWD,
 	"QUIT": commandQUIT,
 	"RETR": commandRETR,
 	"STOR": commandSTOR,
 	"SYST": commandSYST,
 	"TYPE": commandTYPE,
 	"USER": commandUSER,
+}
+
+func commandCWD(conn *ftpConn, param string) {
+	path := strings.TrimSpace(param)
+	if len(path) < 1 {
+		path = "/"
+	} else if filepath.IsAbs(path) {
+		// noop
+	} else {
+		path = filepath.Join(conn.curDir, path)
+	}
+
+	if !fsStore.IsDir(path) {
+		conn.writeMessage(550, "No such directory")
+		return
+	}
+
+	conn.curDir = path
+	conn.writeMessage(250, "Change working directory successfully")
 }
 
 func commandLIST(conn *ftpConn, param string) {
@@ -93,6 +115,10 @@ func commandPASV(conn *ftpConn, param string) {
 	target := "(" + hostFields[0] + "," + hostFields[1] + "," + hostFields[2] + "," + hostFields[3] + "," + p1 + "," + p2 + ")"
 
 	conn.writeMessage(227, "Entering Passive Mode "+target)
+}
+
+func commandPWD(conn *ftpConn, param string) {
+	conn.writeMessage(257, "\""+conn.curDir+"\" is current directory")
 }
 
 func commandQUIT(conn *ftpConn, param string) {
