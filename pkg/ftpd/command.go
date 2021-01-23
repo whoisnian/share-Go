@@ -16,6 +16,7 @@ var commandMap = map[string]func(*ftpConn, string){
 	"FEAT": commandFEAT,
 	"LIST": commandLIST,
 	"MDTM": commandMDTM,
+	"MKD":  commandMKD,
 	"PASS": commandPASS,
 	"PASV": commandPASV,
 	"PWD":  commandPWD,
@@ -145,6 +146,30 @@ func commandMDTM(conn *ftpConn, param string) {
 	}
 
 	conn.writeMessage(213, fileInfo.ModTime().Format("20060102150405"))
+}
+
+func commandMKD(conn *ftpConn, param string) {
+	path := strings.TrimSpace(param)
+	if len(path) < 1 {
+		conn.writeMessage(500, "Syntax error")
+		return
+	}
+	path = conn.buildPath(path)
+
+	if fileInfo, _ := fsStore.FileInfo(path); fileInfo != nil {
+		conn.writeMessage(550, "File or directory already exists")
+		return
+	}
+
+	if err := fsStore.CreateDir(path); err != nil {
+		if os.IsPermission(err) {
+			conn.writeMessage(550, "Permission denied")
+		} else {
+			conn.writeMessage(550, "Directory not available")
+		}
+		return
+	}
+	conn.writeMessage(250, "Create directory successfully")
 }
 
 func commandPASS(conn *ftpConn, param string) {
