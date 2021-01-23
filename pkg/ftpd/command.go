@@ -14,6 +14,7 @@ var commandMap = map[string]func(*ftpConn, string){
 	"PASV": commandPASV,
 	"QUIT": commandQUIT,
 	"RETR": commandRETR,
+	"STOR": commandSTOR,
 	"SYST": commandSYST,
 	"TYPE": commandTYPE,
 	"USER": commandUSER,
@@ -111,6 +112,28 @@ func commandRETR(conn *ftpConn, param string) {
 
 	conn.writeMessage(150, "Sending file")
 	conn.sendStreamData(file)
+}
+
+func commandSTOR(conn *ftpConn, param string) {
+	conn.dataLock.Lock()
+	defer conn.dataLock.Unlock()
+	if conn.dataConn == nil {
+		conn.writeMessage(425, "Error opening data socket")
+		return
+	}
+
+	file, err := fsStore.CreateFile(conn.buildPath(param))
+	if err != nil {
+		if os.IsPermission(err) {
+			conn.writeMessage(550, "File permission is denied")
+		} else {
+			conn.writeMessage(550, "Unexpected error")
+		}
+		return
+	}
+
+	conn.writeMessage(150, "Receiving file")
+	conn.writeStreamData(file)
 }
 
 func commandSYST(conn *ftpConn, param string) {

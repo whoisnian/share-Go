@@ -64,6 +64,19 @@ func (conn *ftpConn) sendStreamData(reader io.ReadCloser) error {
 	return nil
 }
 
+func (conn *ftpConn) writeStreamData(writer io.WriteCloser) error {
+	defer func() {
+		conn.dataConn.Close()
+		conn.dataConn = nil
+	}()
+
+	if _, err := io.Copy(writer, conn.dataConn); err != nil {
+		return err
+	}
+	conn.writeMessage(226, "Data transmission OK")
+	return nil
+}
+
 func (conn *ftpConn) receiveLine(line string) {
 	logger.Debug("--> ", line)
 	command, param := conn.parseLine(line)

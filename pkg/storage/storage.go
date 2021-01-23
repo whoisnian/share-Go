@@ -64,3 +64,8 @@ func (store *Store) CreateDir(path string) error {
 func (store *Store) GetFile(path string) (io.ReadCloser, error) {
 	return os.Open(filepath.Join(store.base, path))
 }
+
+// CreateFile ...
+func (store *Store) CreateFile(path string) (io.WriteCloser, error) {
+	return os.Create(filepath.Join(store.base, path))
+}
