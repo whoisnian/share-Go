@@ -128,10 +128,12 @@ func commandPASS(conn *ftpConn, param string) {
 }
 
 func commandPASV(conn *ftpConn, param string) {
+	conn.dataLock.Lock()
 	if conn.dataConn != nil {
-		conn.writeMessage(425, "Already connected")
-		return
+		conn.dataConn.Close()
+		conn.dataConn = nil
 	}
+	conn.dataLock.Unlock()
 
 	listener, err := net.ListenTCP("tcp", nil)
 	if err != nil {
