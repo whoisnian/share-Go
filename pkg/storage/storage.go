@@ -19,7 +19,7 @@ func New(path string) *Store {
 	if err != nil {
 		logger.Panic(err)
 	}
-	if _, err := os.Lstat(base); os.IsNotExist(err) {
+	if _, err := os.Stat(base); os.IsNotExist(err) {
 		logger.Panic(err)
 	}
 	return &Store{base}
@@ -27,7 +27,7 @@ func New(path string) *Store {
 
 // IsDir ...
 func (store *Store) IsDir(path string) bool {
-	if fileInfo, err := os.Lstat(filepath.Join(store.base, path)); err == nil {
+	if fileInfo, err := os.Stat(filepath.Join(store.base, path)); err == nil {
 		return fileInfo.Mode().IsDir()
 	}
 	return false
@@ -35,7 +35,7 @@ func (store *Store) IsDir(path string) bool {
 
 // IsFile ...
 func (store *Store) IsFile(path string) bool {
-	if fileInfo, err := os.Lstat(filepath.Join(store.base, path)); err == nil {
+	if fileInfo, err := os.Stat(filepath.Join(store.base, path)); err == nil {
 		return fileInfo.Mode().IsRegular()
 	}
 	return false
@@ -43,7 +43,7 @@ func (store *Store) IsFile(path string) bool {
 
 // FileInfo ...
 func (store *Store) FileInfo(path string) (os.FileInfo, error) {
-	return os.Lstat(filepath.Join(store.base, path))
+	return os.Stat(filepath.Join(store.base, path))
 }
 
 // ListDir ...
