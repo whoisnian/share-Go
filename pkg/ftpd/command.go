@@ -4,6 +4,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var commandMap = map[string]func(*ftpConn, string){
@@ -17,6 +18,8 @@ var commandMap = map[string]func(*ftpConn, string){
 }
 
 func commandLIST(conn *ftpConn, param string) {
+	conn.dataLock.Lock()
+	defer conn.dataLock.Unlock()
 	if conn.dataConn == nil {
 		conn.writeMessage(425, "Error opening data socket")
 		return
@@ -50,12 +53,20 @@ func commandPASV(conn *ftpConn, param string) {
 		return
 	}
 
-	listener, err := net.Listen("tcp", "")
+	listener, err := net.ListenTCP("tcp", nil)
 	if err != nil {
 		conn.writeMessage(425, "Data connection failed")
 		return
 	}
+
+	if listener.SetDeadline(time.Now().Add(10*time.Second)) != nil {
+		conn.writeMessage(425, "Data connection failed")
+		return
+	}
+
+	conn.dataLock.Lock()
 	go func() {
+		defer conn.dataLock.Unlock()
 		conn.dataConn, _ = listener.Accept()
 		listener.Close()
 	}()

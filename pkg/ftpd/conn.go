@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/whoisnian/share-Go/pkg/logger"
 )
@@ -16,6 +17,7 @@ type ftpConn struct {
 	ctrlW    *bufio.Writer
 	ctrlR    *bufio.Reader
 	dataConn net.Conn
+	dataLock sync.Mutex
 	curDir   string
 }
 
