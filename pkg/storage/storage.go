@@ -41,6 +41,11 @@ func (store *Store) IsFile(path string) bool {
 	return false
 }
 
+// FileInfo ...
+func (store *Store) FileInfo(path string) (os.FileInfo, error) {
+	return os.Lstat(filepath.Join(store.base, path))
+}
+
 // ListDir ...
 func (store *Store) ListDir(path string) ([]os.FileInfo, error) {
 	dir, err := os.Open(filepath.Join(store.base, path))

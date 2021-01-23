@@ -38,6 +38,13 @@ func (conn *ftpConn) writeMessage(code int, message string) {
 	conn.ctrlW.Flush()
 }
 
+func (conn *ftpConn) writeMessageMultiline(code int, message string) {
+	content := strconv.Itoa(code) + "-" + message + strconv.Itoa(code) + " END\r\n"
+	logger.Debug("<-- ", content)
+	conn.ctrlW.WriteString(content)
+	conn.ctrlW.Flush()
+}
+
 func (conn *ftpConn) sendByteData(data []byte) error {
 	defer func() {
 		conn.dataConn.Close()

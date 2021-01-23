@@ -3,7 +3,6 @@ package ftpd
 import (
 	"net"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -12,13 +11,15 @@ import (
 )
 
 var commandMap = map[string]func(*ftpConn, string){
-	"CWD": commandCWD,
+	"CWD":  commandCWD,
+	"FEAT": commandFEAT,
 	"LIST": commandLIST,
 	"PASS": commandPASS,
 	"PASV": commandPASV,
 	"PWD":  commandPWD,
 	"QUIT": commandQUIT,
 	"RETR": commandRETR,
+	"SIZE": commandSIZE,
 	"STOR": commandSTOR,
 	"SYST": commandSYST,
 	"TYPE": commandTYPE,
@@ -29,10 +30,8 @@ func commandCWD(conn *ftpConn, param string) {
 	path := strings.TrimSpace(param)
 	if len(path) < 1 {
 		path = "/"
-	} else if filepath.IsAbs(path) {
-		// noop
 	} else {
-		path = filepath.Join(conn.curDir, path)
+		path = conn.buildPath(path)
 	}
 
 	if !fsStore.IsDir(path) {
@@ -42,6 +41,18 @@ func commandCWD(conn *ftpConn, param string) {
 
 	conn.curDir = path
 	conn.writeMessage(250, "Change working directory successfully")
+}
+
+func commandFEAT(conn *ftpConn, param string) {
+	extendCommands := []string{
+		"SIZE",
+	}
+
+	content := "Supported extensions:\r\n"
+	for _, cmd := range extendCommands {
+		content += " " + cmd + "\r\n"
+	}
+	conn.writeMessageMultiline(211, content)
 }
 
 func commandLIST(conn *ftpConn, param string) {
@@ -147,6 +158,22 @@ func commandRETR(conn *ftpConn, param string) {
 
 	conn.writeMessage(150, "Sending file")
 	conn.sendStreamData(file)
+}
+
+func commandSIZE(conn *ftpConn, param string) {
+	path := strings.TrimSpace(param)
+	if len(path) < 1 {
+		conn.writeMessage(500, "Syntax error")
+		return
+	}
+
+	fileInfo, err := fsStore.FileInfo(conn.buildPath(path))
+	if err != nil || !fileInfo.Mode().IsRegular() {
+		conn.writeMessage(550, "No such file")
+		return
+	}
+
+	conn.writeMessage(213, strconv.FormatInt(fileInfo.Size(), 10))
 }
 
 func commandSTOR(conn *ftpConn, param string) {
