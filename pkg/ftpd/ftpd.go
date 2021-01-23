@@ -17,6 +17,9 @@ func handleConn(conn *ftpConn) {
 			break
 		}
 		conn.receiveLine(line)
+		if conn.closed {
+			break
+		}
 	}
 }
 

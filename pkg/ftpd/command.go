@@ -171,6 +171,7 @@ func commandPWD(conn *ftpConn, param string) {
 
 func commandQUIT(conn *ftpConn, param string) {
 	conn.writeMessage(221, "Goodbye")
+	conn.close()
 }
 
 func commandRETR(conn *ftpConn, param string) {

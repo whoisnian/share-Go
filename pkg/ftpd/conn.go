@@ -19,6 +19,7 @@ type ftpConn struct {
 	dataConn net.Conn
 	dataLock sync.Mutex
 	curDir   string
+	closed   bool
 }
 
 func newftpConn(conn net.Conn) *ftpConn {
@@ -28,6 +29,7 @@ func newftpConn(conn net.Conn) *ftpConn {
 		ctrlR:    bufio.NewReader(conn),
 		dataConn: nil,
 		curDir:   "/",
+		closed:   false,
 	}
 }
 
@@ -82,6 +84,15 @@ func (conn *ftpConn) writeStreamData(writer io.WriteCloser) error {
 	}
 	conn.writeMessage(226, "Data transmission OK")
 	return nil
+}
+
+func (conn *ftpConn) close() {
+	conn.ctrlConn.Close()
+	conn.closed = true
+	if conn.dataConn != nil {
+		conn.dataConn.Close()
+		conn.dataConn = nil
+	}
 }
 
 func (conn *ftpConn) receiveLine(line string) {
