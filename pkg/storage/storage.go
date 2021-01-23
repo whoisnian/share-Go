@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 
@@ -57,4 +58,9 @@ func (store *Store) DeleteDir(path string) error {
 // CreateDir ...
 func (store *Store) CreateDir(path string) error {
 	return os.MkdirAll(filepath.Join(store.base, path), os.ModePerm)
+}
+
+// GetFile ...
+func (store *Store) GetFile(path string) (io.ReadCloser, error) {
+	return os.Open(filepath.Join(store.base, path))
 }

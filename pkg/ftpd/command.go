@@ -2,6 +2,7 @@ package ftpd
 
 import (
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -12,6 +13,7 @@ var commandMap = map[string]func(*ftpConn, string){
 	"PASS": commandPASS,
 	"PASV": commandPASV,
 	"QUIT": commandQUIT,
+	"RETR": commandRETR,
 	"SYST": commandSYST,
 	"TYPE": commandTYPE,
 	"USER": commandUSER,
@@ -31,7 +33,6 @@ func commandLIST(conn *ftpConn, param string) {
 		return
 	}
 
-	conn.writeMessage(150, "Opening ASCII mode data connection for file list")
 	content := ""
 	for _, fileInfo := range fileInfos {
 		content += fileInfo.Mode().String() +
@@ -40,6 +41,7 @@ func commandLIST(conn *ftpConn, param string) {
 			fileInfo.ModTime().Format(" Jan _2 15:04 ") +
 			fileInfo.Name() + "\r\n"
 	}
+	conn.writeMessage(150, "Opening ASCII mode data connection for file list")
 	conn.sendByteData([]byte(content))
 }
 
@@ -85,6 +87,30 @@ func commandPASV(conn *ftpConn, param string) {
 
 func commandQUIT(conn *ftpConn, param string) {
 	conn.writeMessage(221, "Goodbye")
+}
+
+func commandRETR(conn *ftpConn, param string) {
+	conn.dataLock.Lock()
+	defer conn.dataLock.Unlock()
+	if conn.dataConn == nil {
+		conn.writeMessage(425, "Error opening data socket")
+		return
+	}
+
+	file, err := fsStore.GetFile(conn.buildPath(param))
+	if err != nil {
+		if os.IsNotExist(err) {
+			conn.writeMessage(550, "File does not exist")
+		} else if os.IsPermission(err) {
+			conn.writeMessage(550, "File permission is denied")
+		} else {
+			conn.writeMessage(550, "Unexpected error")
+		}
+		return
+	}
+
+	conn.writeMessage(150, "Sending file")
+	conn.sendStreamData(file)
 }
 
 func commandSYST(conn *ftpConn, param string) {
