@@ -14,6 +14,7 @@ var commandMap = map[string]func(*ftpConn, string){
 	"CWD":  commandCWD,
 	"FEAT": commandFEAT,
 	"LIST": commandLIST,
+	"MDTM": commandMDTM,
 	"PASS": commandPASS,
 	"PASV": commandPASV,
 	"PWD":  commandPWD,
@@ -45,6 +46,7 @@ func commandCWD(conn *ftpConn, param string) {
 
 func commandFEAT(conn *ftpConn, param string) {
 	extendCommands := []string{
+		"MDTM",
 		"SIZE",
 	}
 
@@ -72,7 +74,7 @@ func commandLIST(conn *ftpConn, param string) {
 
 	fileInfo, err := fsStore.FileInfo(conn.buildPath(param[i:]))
 	if err != nil {
-		conn.writeMessage(550, "Unexpected error")
+		conn.writeMessage(550, "File or directory not available")
 		return
 	}
 
@@ -86,7 +88,7 @@ func commandLIST(conn *ftpConn, param string) {
 	} else {
 		infos, err := fsStore.ListDir(conn.buildPath(param[i:]))
 		if err != nil {
-			conn.writeMessage(550, err.Error())
+			conn.writeMessage(550, "Directory not available")
 			return
 		}
 
@@ -100,6 +102,25 @@ func commandLIST(conn *ftpConn, param string) {
 	}
 	conn.writeMessage(150, "Opening ASCII mode data connection for file list")
 	conn.sendByteData([]byte(content))
+}
+
+func commandMDTM(conn *ftpConn, param string) {
+	path := strings.TrimSpace(param)
+	if len(path) < 1 {
+		conn.writeMessage(500, "Syntax error")
+		return
+	}
+
+	fileInfo, err := fsStore.FileInfo(conn.buildPath(path))
+	if err != nil {
+		conn.writeMessage(550, "File not available")
+		return
+	} else if !fileInfo.Mode().IsRegular() {
+		conn.writeMessage(550, "No such file")
+		return
+	}
+
+	conn.writeMessage(213, fileInfo.ModTime().Format("20060102150405"))
 }
 
 func commandPASS(conn *ftpConn, param string) {
@@ -163,9 +184,9 @@ func commandRETR(conn *ftpConn, param string) {
 		if os.IsNotExist(err) {
 			conn.writeMessage(550, "File does not exist")
 		} else if os.IsPermission(err) {
-			conn.writeMessage(550, "File permission is denied")
+			conn.writeMessage(550, "Permission denied")
 		} else {
-			conn.writeMessage(550, "Unexpected error")
+			conn.writeMessage(550, "File not available")
 		}
 		return
 	}
@@ -182,7 +203,10 @@ func commandSIZE(conn *ftpConn, param string) {
 	}
 
 	fileInfo, err := fsStore.FileInfo(conn.buildPath(path))
-	if err != nil || !fileInfo.Mode().IsRegular() {
+	if err != nil {
+		conn.writeMessage(550, "File not available")
+		return
+	} else if !fileInfo.Mode().IsRegular() {
 		conn.writeMessage(550, "No such file")
 		return
 	}
@@ -201,9 +225,9 @@ func commandSTOR(conn *ftpConn, param string) {
 	file, err := fsStore.CreateFile(conn.buildPath(param))
 	if err != nil {
 		if os.IsPermission(err) {
-			conn.writeMessage(550, "File permission is denied")
+			conn.writeMessage(550, "Permission denied")
 		} else {
-			conn.writeMessage(550, "Unexpected error")
+			conn.writeMessage(550, "File not available")
 		}
 		return
 	}
