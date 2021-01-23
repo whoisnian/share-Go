@@ -2,8 +2,11 @@
 .vscode
 
 # Ignore binary
-main
-share-Go
+/main
+/share-Go
 
 # Ignore config
-config.json
+/config.json
+
+# Ignore dataDir
+/uploads/*
