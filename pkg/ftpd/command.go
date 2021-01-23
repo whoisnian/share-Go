@@ -70,19 +70,33 @@ func commandLIST(conn *ftpConn, param string) {
 		}
 	}
 
-	fileInfos, err := fsStore.ListDir(conn.buildPath(param[i:]))
+	fileInfo, err := fsStore.FileInfo(conn.buildPath(param[i:]))
 	if err != nil {
-		conn.writeMessage(550, err.Error())
+		conn.writeMessage(550, "Unexpected error")
 		return
 	}
 
 	content := ""
-	for _, fileInfo := range fileInfos {
-		content += fileInfo.Mode().String() +
+	if fileInfo.Mode().IsRegular() {
+		content = fileInfo.Mode().String() +
 			" 1 ftp ftp " +
 			" " + strconv.Itoa(int(fileInfo.Size())) + " " +
 			fileInfo.ModTime().Format(" Jan _2 15:04 ") +
 			fileInfo.Name() + "\r\n"
+	} else {
+		infos, err := fsStore.ListDir(conn.buildPath(param[i:]))
+		if err != nil {
+			conn.writeMessage(550, err.Error())
+			return
+		}
+
+		for _, info := range infos {
+			content += info.Mode().String() +
+				" 1 ftp ftp " +
+				" " + strconv.Itoa(int(info.Size())) + " " +
+				info.ModTime().Format(" Jan _2 15:04 ") +
+				info.Name() + "\r\n"
+		}
 	}
 	conn.writeMessage(150, "Opening ASCII mode data connection for file list")
 	conn.sendByteData([]byte(content))
