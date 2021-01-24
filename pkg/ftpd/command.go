@@ -17,6 +17,8 @@ var commandMap = map[string]func(*ftpConn, string){
 	"LIST": commandLIST,
 	"MDTM": commandMDTM,
 	"MKD":  commandMKD,
+	"MLSD": commandMLSD,
+	"MLST": commandMLST,
 	"OPTS": commandOPTS,
 	"PASS": commandPASS,
 	"PASV": commandPASV,
@@ -73,6 +75,7 @@ func commandDELE(conn *ftpConn, param string) {
 func commandFEAT(conn *ftpConn, param string) {
 	extendCommands := []string{
 		"MDTM",
+		"MLST Type;Perm;Modify;Size;",
 		"SIZE",
 		"UTF8",
 	}
@@ -172,6 +175,56 @@ func commandMKD(conn *ftpConn, param string) {
 		return
 	}
 	conn.writeMessage(250, "Create directory successfully")
+}
+
+func commandMLSD(conn *ftpConn, param string) {
+	conn.dataLock.Lock()
+	defer conn.dataLock.Unlock()
+	if conn.dataConn == nil {
+		conn.writeMessage(425, "Error opening data socket")
+		return
+	}
+
+	path := strings.TrimSpace(param)
+	fileInfo, err := fsStore.FileInfo(conn.buildPath(path))
+	if err != nil {
+		conn.writeMessage(550, "File or directory not available")
+		return
+	}
+
+	content := ""
+	if fileInfo.Mode().IsRegular() {
+		content = formatMLSxFileInfo(fileInfo)
+	} else {
+		infos, err := fsStore.ListDir(conn.buildPath(path))
+		if err != nil {
+			conn.writeMessage(550, "Directory not available")
+			return
+		}
+
+		for _, info := range infos {
+			content += formatMLSxFileInfo(info)
+		}
+	}
+	conn.writeMessage(150, "Opening ASCII mode data connection for file list")
+	conn.sendByteData([]byte(content))
+}
+
+func commandMLST(conn *ftpConn, param string) {
+	path := strings.TrimSpace(param)
+	if len(path) < 1 {
+		conn.writeMessage(500, "Syntax error")
+		return
+	}
+
+	fileInfo, err := fsStore.FileInfo(conn.buildPath(path))
+	if err != nil {
+		conn.writeMessage(550, "File or directory not available")
+		return
+	}
+
+	content := "MLST result:\r\n " + formatMLSxFileInfo(fileInfo)
+	conn.writeMessageMultiline(250, content)
 }
 
 func commandOPTS(conn *ftpConn, param string) {
@@ -346,4 +399,19 @@ func commandTYPE(conn *ftpConn, param string) {
 
 func commandUSER(conn *ftpConn, param string) {
 	conn.writeMessage(230, "Guest login ok")
+}
+
+func formatMLSxFileInfo(file os.FileInfo) string {
+	if file.IsDir() {
+		return "Type=dir" +
+			";Perm=" + file.Mode().String() +
+			";Modify=" + file.ModTime().Format("20060102150405") +
+			"; " + file.Name() + "\r\n"
+	}
+
+	return "Type=file" +
+		";Perm=" + file.Mode().String() +
+		";Modify=" + file.ModTime().Format("20060102150405") +
+		";Size=" + strconv.Itoa(int(file.Size())) +
+		"; " + file.Name() + "\r\n"
 }
