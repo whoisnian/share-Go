@@ -17,6 +17,7 @@ var commandMap = map[string]func(*ftpConn, string){
 	"LIST": commandLIST,
 	"MDTM": commandMDTM,
 	"MKD":  commandMKD,
+	"OPTS": commandOPTS,
 	"PASS": commandPASS,
 	"PASV": commandPASV,
 	"PWD":  commandPWD,
@@ -73,6 +74,7 @@ func commandFEAT(conn *ftpConn, param string) {
 	extendCommands := []string{
 		"MDTM",
 		"SIZE",
+		"UTF8",
 	}
 
 	content := "Supported extensions:\r\n"
@@ -170,6 +172,25 @@ func commandMKD(conn *ftpConn, param string) {
 		return
 	}
 	conn.writeMessage(250, "Create directory successfully")
+}
+
+func commandOPTS(conn *ftpConn, param string) {
+	fields := strings.Fields(param)
+	if len(fields) != 2 {
+		conn.writeMessage(500, "Syntax error")
+		return
+	}
+
+	if strings.ToUpper(fields[0]) != "UTF8" {
+		conn.writeMessage(501, "Unknown option")
+		return
+	}
+
+	if strings.ToUpper(fields[1]) == "ON" {
+		conn.writeMessage(200, "UTF8 mode enabled")
+	} else {
+		conn.writeMessage(501, "Unsupported non-utf8 mode")
+	}
 }
 
 func commandPASS(conn *ftpConn, param string) {
