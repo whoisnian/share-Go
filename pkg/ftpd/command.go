@@ -19,6 +19,7 @@ var commandMap = map[string]func(*ftpConn, string){
 	"MKD":  commandMKD,
 	"MLSD": commandMLSD,
 	"MLST": commandMLST,
+	"NOOP": commandNOOP,
 	"OPTS": commandOPTS,
 	"PASS": commandPASS,
 	"PASV": commandPASV,
@@ -225,6 +226,10 @@ func commandMLST(conn *ftpConn, param string) {
 
 	content := "MLST result:\r\n " + formatMLSxFileInfo(fileInfo)
 	conn.writeMessageMultiline(250, content)
+}
+
+func commandNOOP(conn *ftpConn, param string) {
+	conn.writeMessage(200, "OK")
 }
 
 func commandOPTS(conn *ftpConn, param string) {
