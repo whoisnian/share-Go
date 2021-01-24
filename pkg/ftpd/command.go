@@ -23,6 +23,7 @@ var commandMap = map[string]func(*ftpConn, string){
 	"OPTS": commandOPTS,
 	"PASS": commandPASS,
 	"PASV": commandPASV,
+	"PORT": commandPORT,
 	"PWD":  commandPWD,
 	"QUIT": commandQUIT,
 	"RETR": commandRETR,
@@ -265,12 +266,12 @@ func commandPASV(conn *ftpConn, param string) {
 
 	listener, err := net.ListenTCP("tcp", nil)
 	if err != nil {
-		conn.writeMessage(425, "Data connection failed")
+		conn.writeMessage(425, "Error opening data socket")
 		return
 	}
 
 	if listener.SetDeadline(time.Now().Add(10*time.Second)) != nil {
-		conn.writeMessage(425, "Data connection failed")
+		conn.writeMessage(425, "Error opening data socket")
 		return
 	}
 
@@ -291,6 +292,35 @@ func commandPASV(conn *ftpConn, param string) {
 	target := "(" + hostFields[0] + "," + hostFields[1] + "," + hostFields[2] + "," + hostFields[3] + "," + p1 + "," + p2 + ")"
 
 	conn.writeMessage(227, "Entering Passive Mode "+target)
+}
+
+func commandPORT(conn *ftpConn, param string) {
+	list := strings.Split(param, ",")
+	if len(list) != 6 {
+		conn.writeMessage(500, "Syntax error")
+		return
+	}
+
+	p1, _ := strconv.Atoi(list[4])
+	p2, _ := strconv.Atoi(list[5])
+	p := (p1 * 256) + p2
+	addr := list[0] + "." + list[1] + "." + list[2] + "." + list[3] + ":" + strconv.Itoa(p)
+
+	conn.dataLock.Lock()
+	if conn.dataConn != nil {
+		conn.dataConn.Close()
+		conn.dataConn = nil
+	}
+	defer conn.dataLock.Unlock()
+
+	var err error
+	conn.dataConn, err = net.DialTimeout("tcp", addr, 10*time.Second)
+	if err != nil {
+		conn.writeMessage(425, "Error opening data socket")
+		return
+	}
+
+	conn.writeMessage(200, "Data connection ready")
 }
 
 func commandPWD(conn *ftpConn, param string) {
