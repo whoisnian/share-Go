@@ -113,7 +113,7 @@ func (mux *serveMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			r.Method, " ",
 			r.URL.Path, " ",
 			r.UserAgent(), " ",
-			time.Now().Sub(start).Milliseconds(),
+			time.Since(start).Milliseconds(),
 		)
 	}()
 
@@ -130,8 +130,17 @@ func (mux *serveMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	res, ok := node.next[methodTag]
 	if !ok {
-		store.Respond404()
-		return
+		// If there is no handler for route "/foo/bar", try "/foo/bar/:param" and "/foo/bar/*".
+		if node.next[routeParam] != nil && node.next[routeParam].next[methodTag] != nil {
+			paramValueList = append(paramValueList, "")
+			res = node.next[routeParam].next[methodTag]
+		} else if node.next[routeAny] != nil && node.next[routeAny].next[methodTag] != nil {
+			paramValueList = append(paramValueList, "")
+			res = node.next[routeAny].next[methodTag]
+		} else {
+			store.Respond404()
+			return
+		}
 	}
 
 	for index, paramName := range res.data.paramNameList {

@@ -1,6 +1,7 @@
 package httpd
 
 import (
+	"encoding/json"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -62,6 +63,15 @@ func (store Store) Respond200(content []byte) error {
 		return err
 	}
 	return nil
+}
+
+// RespondJson replies 200 to client request with json body.
+func (store Store) RespondJson(v interface{}) error {
+	content, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	return store.Respond200(content)
 }
 
 // Redirect is similar to `http.Redirect()`.
