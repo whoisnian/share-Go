@@ -5,14 +5,23 @@ import (
 	"github.com/whoisnian/share-Go/pkg/httpd"
 )
 
-func init() {
+func Init() {
+	handler.Init()
+
 	routes := []struct {
 		pattern string
 		method  string
 		handler func(httpd.Store)
 	}{
-		{"/upload", "POST", handler.UploadHandler},
-		{"/", "GET", handler.IndexHander},
+		{"/api/file/*", "GET", handler.FileInfoHandler},
+		{"/api/file/*", "POST", handler.CreateFileHandler},
+		{"/api/file/*", "DELETE", handler.DeleteFileHandler},
+		{"/api/dir/*", "GET", handler.ListDirHandler},
+		{"/api/dir/*", "POST", handler.CreateDirHandler},
+		{"/api/dir/*", "DELETE", handler.DeleteDirHandler},
+
+		{"/upload", "POST", handler.UploadHandler}, // TODO
+		{"/", "GET", handler.IndexHander},          // TODO
 	}
 
 	for _, route := range routes {

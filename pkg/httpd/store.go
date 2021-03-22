@@ -2,6 +2,7 @@ package httpd
 
 import (
 	"encoding/json"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -32,6 +33,11 @@ func (store Store) RouteParam(name string) string {
 	return ""
 }
 
+// RouteAny returns the value of route param "/*".
+func (store Store) RouteAny() string {
+	return store.RouteParam(routeAny)
+}
+
 // CookieValue returns the value of specified cookie, or empty string if cookie not found.
 func (store Store) CookieValue(name string) string {
 	if cookie, err := store.r.Cookie(name); err == nil {
@@ -43,6 +49,11 @@ func (store Store) CookieValue(name string) string {
 // URL equals to `http.Request.URL`.
 func (store Store) URL() *url.URL {
 	return store.r.URL
+}
+
+// Body equals to `http.Request.Body`.
+func (store Store) Body() io.ReadCloser {
+	return store.r.Body
 }
 
 // MultipartReader equals to `http.Request.MultipartReader()`.
@@ -67,11 +78,8 @@ func (store Store) Respond200(content []byte) error {
 
 // RespondJson replies 200 to client request with json body.
 func (store Store) RespondJson(v interface{}) error {
-	content, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-	return store.Respond200(content)
+	store.w.Header().Add("content-type", "application/json; charset=UTF-8")
+	return json.NewEncoder(store.w).Encode(v)
 }
 
 // Redirect is similar to `http.Redirect()`.
