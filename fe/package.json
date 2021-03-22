@@ -1,0 +1,17 @@
+{
+  "name": "share-fe",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "start": "NODE_ENV=development node ./scripts/start.js",
+    "build": "NODE_ENV=production node ./scripts/build.js",
+    "runT": "NODE_ENV=development esbuild --platform=node --loader=js --sourcefile=t.js --bundle --sourcemap < t.js | node --enable-source-maps",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "whoisnian",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.9.2",
+    "standard": "^16.0.3"
+  }
+}

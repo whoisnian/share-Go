@@ -1,0 +1,5 @@
+# Ignore js dep
+/node_modules
+
+# Ignore output
+/dist
