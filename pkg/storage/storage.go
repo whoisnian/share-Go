@@ -4,13 +4,40 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/whoisnian/share-Go/pkg/logger"
 )
 
 // Store ...
 type Store struct {
-	base string
+	base    string
+	lockMap *sync.Map
+}
+
+func (store *Store) getLocker(path string) *sync.RWMutex {
+	locker, _ := store.lockMap.LoadOrStore(path, new(sync.RWMutex))
+	return locker.(*sync.RWMutex)
+}
+
+type readCloser struct {
+	*os.File
+	locker *sync.RWMutex
+}
+
+func (r readCloser) Close() error {
+	r.locker.RUnlock()
+	return r.File.Close()
+}
+
+type writeCloser struct {
+	*os.File
+	locker *sync.RWMutex
+}
+
+func (w writeCloser) Close() error {
+	w.locker.Unlock()
+	return w.File.Close()
 }
 
 // New ...
@@ -22,7 +49,7 @@ func New(path string) *Store {
 	if _, err := os.Stat(base); os.IsNotExist(err) {
 		logger.Panic(err)
 	}
-	return &Store{base}
+	return &Store{base, new(sync.Map)}
 }
 
 // IsDir ...
@@ -72,10 +99,28 @@ func (store *Store) CreateDir(path string) error {
 
 // GetFile ...
 func (store *Store) GetFile(path string) (io.ReadCloser, error) {
-	return os.Open(filepath.Join(store.base, path))
+	realPath := filepath.Join(store.base, path)
+	lock := store.getLocker(realPath)
+	lock.RLock()
+
+	file, err := os.Open(realPath)
+	if err != nil {
+		lock.RUnlock()
+		return nil, err
+	}
+	return &readCloser{file, lock}, nil
 }
 
 // CreateFile ...
 func (store *Store) CreateFile(path string) (io.WriteCloser, error) {
-	return os.Create(filepath.Join(store.base, path))
+	realPath := filepath.Join(store.base, path)
+	lock := store.getLocker(realPath)
+	lock.Lock()
+
+	file, err := os.Create(realPath)
+	if err != nil {
+		lock.Unlock()
+		return nil, err
+	}
+	return &writeCloser{file, lock}, nil
 }

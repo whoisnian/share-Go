@@ -62,6 +62,7 @@ func (conn *ftpConn) sendByteData(data []byte) error {
 
 func (conn *ftpConn) sendStreamData(reader io.ReadCloser) error {
 	defer func() {
+		reader.Close()
 		conn.dataConn.Close()
 		conn.dataConn = nil
 	}()
@@ -75,6 +76,7 @@ func (conn *ftpConn) sendStreamData(reader io.ReadCloser) error {
 
 func (conn *ftpConn) writeStreamData(writer io.WriteCloser) error {
 	defer func() {
+		writer.Close()
 		conn.dataConn.Close()
 		conn.dataConn = nil
 	}()
