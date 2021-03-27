@@ -1,7 +1,7 @@
 import { createFileView } from 'components/fileView'
 import { createDirView } from 'components/dirView'
 import { FileType, requestFileInfo } from 'api/storage'
-import { getRootElement, removeAllChildren } from 'utils/element'
+import { getRootElement } from 'utils/element'
 
 const initViewPage = async () => {
   const pathname = window.location.pathname
@@ -18,9 +18,9 @@ const initViewPage = async () => {
       : status === 404
         ? 'File or dir not found'
         : 'Unexpected error'
-    const rootElement = getRootElement()
-    removeAllChildren(rootElement)
-    rootElement.appendChild(document.createTextNode(tipContent))
+    getRootElement()
+      .removeAllChildren()
+      .appendChild(document.createTextNode(tipContent))
   }
 }
 

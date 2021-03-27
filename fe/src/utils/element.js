@@ -1,14 +1,12 @@
 const getRootElement = () => {
-  return document.getElementById('root')
-}
-
-const removeAllChildren = (element) => {
-  while (element.firstChild) {
-    element.removeChild(element.firstChild)
+  const rootElement = document.getElementById('root')
+  rootElement.removeAllChildren = () => {
+    while (rootElement.firstChild) {
+      rootElement.removeChild(rootElement.firstChild)
+    }
+    return rootElement
   }
+  return rootElement
 }
 
-export {
-  getRootElement,
-  removeAllChildren
-}
+export { getRootElement }

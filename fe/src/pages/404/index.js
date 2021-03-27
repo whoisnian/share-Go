@@ -1,9 +1,9 @@
-import { getRootElement, removeAllChildren } from 'utils/element'
+import { getRootElement } from 'utils/element'
 
 const init404Page = async () => {
-  const rootElement = getRootElement()
-  removeAllChildren(rootElement)
-  rootElement.appendChild(document.createTextNode('404 Not Found'))
+  getRootElement()
+    .removeAllChildren()
+    .appendChild(document.createTextNode('Page Not Found'))
 }
 
 export { init404Page }

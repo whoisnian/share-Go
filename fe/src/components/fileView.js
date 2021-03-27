@@ -1,12 +1,21 @@
 import { requestFileInfo } from 'api/storage'
-import { getRootElement, removeAllChildren } from 'utils/element'
+import { getRootElement } from 'utils/element'
 
 const createFileView = async (path) => {
-  const fileInfo = await requestFileInfo(path)
+  const { ok, status, content: fileInfo } = await requestFileInfo(path)
+  if (!ok) {
+    const tipContent = status === 404
+      ? 'File not found'
+      : 'Unexpected error'
+    getRootElement()
+      .removeAllChildren()
+      .appendChild(document.createTextNode(tipContent))
+    return
+  }
 
-  const rootElement = getRootElement()
-  removeAllChildren(rootElement)
-  rootElement.appendChild(document.createTextNode(`TODO: preview page for '${fileInfo.Name}'.`))
+  getRootElement()
+    .removeAllChildren()
+    .appendChild(document.createTextNode(`TODO: preview page for '${fileInfo.Name}'.`))
 }
 
 export { createFileView }

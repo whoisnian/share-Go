@@ -17,16 +17,16 @@ const FileType = {
 
 /** @param { string } path */
 const requestFileInfo = async (path) => {
-  /** @type {{ ok: boolean, status: number, content: FileInfo }} */
+  /** @type {{ ok: boolean, status: number, content: FileInfo | null }} */
   const result = await fetchGetJSONWithStatus(`/api/file${path}`)
   return result
 }
 
 /** @param { string } path */
 const requestListDir = async (path) => {
-  /** @type {{ FileInfos: FileInfo[] }} */
-  const { FileInfos } = await fetchGetJSON(`/api/dir${path}`)
-  return FileInfos
+  /** @type {{ ok: boolean, status: number, content: { FileInfos: FileInfo[] } | null }} */
+  const result = await fetchGetJSONWithStatus(`/api/dir${path}`)
+  return result
 }
 
 export {
