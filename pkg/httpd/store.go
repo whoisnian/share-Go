@@ -76,9 +76,9 @@ func (store Store) Respond200(content []byte) error {
 	return nil
 }
 
-// RespondJson replies 200 to client request with json body.
+// RespondJson replies json body to client request.
 func (store Store) RespondJson(v interface{}) error {
-	store.w.Header().Add("content-type", "application/json; charset=UTF-8")
+	store.w.Header().Add("content-type", "application/json; charset=utf-8")
 	return json.NewEncoder(store.w).Encode(v)
 }
 
@@ -87,9 +87,9 @@ func (store Store) Redirect(url string, code int) {
 	http.Redirect(store.w, store.r, url, code)
 }
 
-// Respond404 is similar to `http.NotFound()`.
-func (store Store) Respond404() {
-	http.NotFound(store.w, store.r)
+// Respond404 is similar to `http.Error()`.
+func (store Store) Respond404(err string) {
+	http.Error(store.w, err, http.StatusNotFound)
 }
 
 // Error500 is similar to `http.Error()`.

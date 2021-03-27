@@ -44,7 +44,8 @@ func FileInfoHandler(store httpd.Store) {
 	info, err := fsStore.FileInfo(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			store.Respond404()
+			store.WriteHeader(http.StatusNotFound)
+			store.RespondJson(nil)
 			return
 		}
 		logger.Panic(err)
@@ -86,7 +87,8 @@ func ListDirHandler(store httpd.Store) {
 	infos, err := fsStore.ListDir(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			store.Respond404()
+			store.WriteHeader(http.StatusNotFound)
+			store.RespondJson(nil)
 			return
 		} else if errors.Is(err, syscall.ENOTDIR) {
 			store.WriteHeader(http.StatusBadRequest)

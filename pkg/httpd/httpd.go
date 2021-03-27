@@ -119,12 +119,12 @@ func (mux *serveMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	methodTag, ok := methodList[r.Method]
 	if !ok {
-		store.Respond404()
+		store.Respond404("HTTP method not found")
 		return
 	}
 	node, paramValueList := findRoute(mux.root, r.URL.EscapedPath())
 	if node == nil {
-		store.Respond404()
+		store.Respond404("Route not found")
 		return
 	}
 
@@ -138,7 +138,7 @@ func (mux *serveMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			paramValueList = append(paramValueList, "")
 			res = node.next[routeAny].next[methodTag]
 		} else {
-			store.Respond404()
+			store.Respond404("Route not found")
 			return
 		}
 	}
