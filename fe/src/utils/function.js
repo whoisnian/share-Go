@@ -1,6 +1,5 @@
-import { version } from '../../package.json'
-
-const PackageVersion = version
+/** @returns {string} */
+const getPackageVersion = () => __PACKAGE_VERSION__
 
 // Units are K,M,G,T,P (powers of 1024) like `/usr/bin/ls`.
 const calcFromBytes = (raw) => {
@@ -23,6 +22,6 @@ const calcFromBytes = (raw) => {
 }
 
 export {
-  PackageVersion,
+  getPackageVersion,
   calcFromBytes
 }
