@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Example</title>
+  <style>
+    .fileList {
+      display: flex;
+      flex-direction: column;
+      width: 75%;
+      max-width: 1000px;
+      margin: auto;
+      background-color: #ffffff;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+    }
+
+    .header {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: left;
+      padding: 8px 12px;
+	    margin: -1px -1px 0 -1px;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      background-color: #f1f8ff;
+      border: 1px solid #c8e1ff;
+      border-bottom-width: 0;
+    }
+
+    .path {
+      display: flex;
+      flex-grow: 1;
+      margin: 2px 10px;
+    }
+
+    .file {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid #e1e4e8;
+      padding: 6px 12px;
+    }
+
+    .file:last-of-type {
+      border-bottom-left-radius: 6px;
+      border-bottom-right-radius: 6px;
+    }
+
+    .file:hover {
+      background-color: #f6f8fa;
+    }
+
+    .file:hover .filemenu {
+      visibility: visible;
+    }
+
+    .filedetails {
+      display: flex;
+      flex-direction: row;
+      justify-content: start;
+      flex-grow: 7;
+      flex-basis: 70%;
+    }
+
+    .fileicon {
+      display: flex;
+    }
+
+    .filename {
+      display: flex;
+      flex-grow: 1;
+    }
+
+    .filemenu {
+      display: flex;
+      visibility: hidden;
+    }
+
+    .filesize {
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: center;
+      flex-grow: 1;
+      flex-basis: 10%;
+    }
+
+    .filetime {
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: center;
+      flex-grow: 2;
+      flex-basis: 20%;
+    }
+  </style>
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <main id="root"></main>
+  <script type="text/javascript">
+    const createDirSvg = () => {
+      const svgItem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgItem.setAttribute('viewBox', '0 0 24 24')
+      svgItem.setAttribute('width', '24')
+      svgItem.setAttribute('height', '24')
+      svgItem.innerHTML = `<path d="M4 4v16h16V6h-6.992l-2-2-.008.008V4H4zm1 1h5.586l1.004 1.004L7.57 10H5V5zm5.008 4H19v10H5v-8h3v-.008l.008.008 2-2z"/>`
+      return svgItem
+    }
+    const createFileSvg = () => {
+      const svgItem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgItem.setAttribute('viewBox', '0 0 24 24')
+      svgItem.setAttribute('width', '24')
+      svgItem.setAttribute('height', '24')
+      svgItem.innerHTML = `<path d="M5 20V4h10v.01l.008-.01L19 7.992V20H5zm1-1h12V9h-4V5H6v14z"/>`
+      return svgItem
+    }
+    const createMenuSvg = () => {
+      const svgItem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgItem.setAttribute('viewBox', '0 0 24 24')
+      svgItem.setAttribute('width', '24')
+      svgItem.setAttribute('height', '24')
+      svgItem.innerHTML = `<path d="M18 11h-2v2h2v-2m-5 0h-2v2h2v-2m-5 0H6v2h2v-2"/>`
+      return svgItem
+    }
+    const createGoToParentSvg = () => {
+      const svgItem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgItem.setAttribute('viewBox', '0 0 24 24')
+      svgItem.setAttribute('width', '24')
+      svgItem.setAttribute('height', '24')
+      svgItem.innerHTML = `<path d="M4 4v16h9v-1H5v-8h3v-.008l.008.008 2-2H19v4h1V6h-6.992l-2-2-.008.008V4H4zm12.5 8.793l-.707.707L13 16.293l.707.707L16 14.707V20h1v-5.293L19.293 17l.707-.707-2.793-2.793-.707-.707z"/>`
+      return svgItem
+    }
+    const createRefreshSvg = () => {
+      const svgItem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgItem.setAttribute('viewBox', '0 0 24 24')
+      svgItem.setAttribute('width', '24')
+      svgItem.setAttribute('height', '24')
+      svgItem.innerHTML = `<path fill="currentColor" d="M20 12c0 1.442-.383 2.79-1.045 3.955l-.738-.738.002-.002-2.778-2.78.707-.706 2.481 2.482A6.946 6.946 0 0 0 19 12c0-3.878-3.122-7-7-7a6.985 6.985 0 0 0-3.217.783l-.738-.738A7.981 7.981 0 0 1 12 4c4.432 0 8 3.568 8 8zm-4.045 6.955A7.981 7.981 0 0 1 12 20c-4.432 0-8-3.568-8-8 0-1.442.383-2.79 1.045-3.955l.684.684.002-.002 2.828 2.828-.707.707-2.479-2.479A6.943 6.943 0 0 0 5 12c0 3.878 3.122 7 7 7a6.985 6.985 0 0 0 3.217-.783z"/>`
+      return svgItem
+    }
+    const createHomeSvg = () => {
+      const svgItem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgItem.setAttribute('viewBox', '0 0 24 24')
+      svgItem.setAttribute('width', '24')
+      svgItem.setAttribute('height', '24')
+      svgItem.innerHTML = `<path d="M12 4l-.707.707L4 12l.707.707.293-.293V20h14v-7.586l.293.293L20 12l-3-3V6h-3l-1.293-1.293L12 4m0 1.414l6 6V19h-4v-5h-4v5H6v-7.586l6-6"/>`
+      return svgItem
+    }
+    const createPasteSvg = () => {
+      const svgItem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgItem.setAttribute('viewBox', '0 0 24 24')
+      svgItem.setAttribute('width', '24')
+      svgItem.setAttribute('height', '24')
+      svgItem.innerHTML = `<path d="M8 4v2H5v14h14V6h-3V4H8zM6 7h1v2h10V7h1v12H6V7zm2 3v1h8v-1H8zm0 3v1h6v-1H8zm0 3v1h3v-1H8z"/>`
+      return svgItem
+    }
+    const createNewDirSvg = () => {
+      const svgItem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgItem.setAttribute('viewBox', '0 0 24 24')
+      svgItem.setAttribute('width', '24')
+      svgItem.setAttribute('height', '24')
+      svgItem.innerHTML = `<path d="M4 4v16h10v-1H5v-8h3v-.01l.008.01 2-2H19v5h1V6h-6.992l-2-2-.008.01V4H4m13 11v2h-2v1h2v2h1v-2h2v-1h-2v-2h-1"/>`
+      return svgItem
+    }
+    const createNewFileSvg = () => {
+      const svgItem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgItem.setAttribute('viewBox', '0 0 24 24')
+      svgItem.setAttribute('width', '24')
+      svgItem.setAttribute('height', '24')
+      svgItem.innerHTML = `<path d="M5 4v16h9v-1H6V5h8v4h4v6h1V7.992L15.008 4 15 4.01V4H5zm11 11v2h-2v1h2v2h1v-2h2v-1h-2v-2h-1z"/>`
+      return svgItem
+    }
+    const createSortSvg = () => {
+      const svgItem = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svgItem.setAttribute('viewBox', '0 0 24 24')
+      svgItem.setAttribute('width', '24')
+      svgItem.setAttribute('height', '24')
+      svgItem.innerHTML = `<g><path d="M16 11v7.086l-2.293-2.293L13 16.5l3.5 3.5 3.5-3.5-.707-.707L17 18.086V11zM4 4v1h7V4zM4 7v1h5V7zM4 10v1h7v-1zM4 20v-1h7v1zM4 17v-1h7v1zM4 14v-1h7v1z"/><path d="M13 14V6.914l-2.293 2.293L10 8.5 13.5 5 17 8.5l-.707.707L14 6.914V14z"/></g>`
+      return svgItem
+    }
+    const calcFromBytes = (raw) => {
+      if (typeof raw === 'string') {
+        raw = parseInt(raw)
+      }
+      if (raw >= 1125899906842624) {
+        return (raw / 1125899906842624).toFixed(1) + ' P'
+      } else if (raw >= 1099511627776) {
+        return (raw / 1099511627776).toFixed(1) + ' T'
+      } else if (raw > 1073741824) {
+        return (raw / 1073741824).toFixed(1) + ' G'
+      } else if (raw > 1048576) {
+        return (raw / 1048576).toFixed(1) + ' M'
+      } else if (raw > 1024) {
+        return (raw / 1024).toFixed(1) + ' K'
+      } else {
+        return raw.toFixed(1) + ' B'
+      }
+    }
+    const calcRelativeTime = (raw) => {
+      if (typeof raw === 'object') {
+        raw = raw.getTime()
+      }
+      const now = Date.now()
+      const rtf = new Intl.RelativeTimeFormat('en-US', { style: 'long' })
+      if (now - raw < 60000) {
+        return rtf.format(raw - now, 'second')
+      } else if (now - raw < 60 * 60000) {
+        return rtf.format(Math.floor((raw - now) / 60000), 'minute')
+      } else if (now - raw < 24 * 60 * 60000) {
+        return rtf.format(Math.floor((raw - now) / 60 / 60000), 'hour')
+      } else if (now - raw < 7 * 24 * 60 * 60000) {
+        return rtf.format(Math.floor((raw - now) / 60 / 60000 / 24), 'day')
+      } else if (now - raw < 30 * 24 * 60 * 60000) {
+        return rtf.format(Math.floor((raw - now) / 60 / 60000 / 24 / 7), 'week')
+      } else if (now - raw < 12 * 30 * 24 * 60 * 60000) {
+        return rtf.format(Math.floor((raw - now) / 60 / 60000 / 24 / 30), 'month')
+      } else {
+        return rtf.format(Math.floor((raw - now) / 60 / 60000 / 24 / 365), 'year')
+      }
+    }
+  </script>
+  <script type="text/javascript">
+    const fileInfos = [{ "Type": 1, "Name": "最终", "Size": 4096, "MTime": 1616826207 }, { "Type": 1, "Name": "abc", "Size": 4096, "MTime": 1616846174 }, { "Type": 0, "Name": "到下", "Size": 2, "MTime": 1606836284 }, { "Type": 0, "Name": "到有", "Size": 2, "MTime": 1516836294 }, { "Type": 1, "Name": "123", "Size": 4096, "MTime": 1616736164 }, { "Type": 0, "Name": "zxa", "Size": 2, "MTime": 1616928920 }, { "Type": 0, "Name": "啊b", "Size": 2, "MTime": 1616836268 }, { "Type": 0, "Name": "啊a", "Size": 2, "MTime": 1616836261 }, { "Type": 1, "Name": "456", "Size": 4096, "MTime": 1616836170 }, { "Type": 0, "Name": "5678", "Size": 2, "MTime": 1616836221 }, { "Type": 0, "Name": "zxc", "Size": 2, "MTime": 1616836245 }, { "Type": 0, "Name": "dft", "Size": 2, "MTime": 1616836233 }, { "Type": 0, "Name": "1234", "Size": 2, "MTime": 1616836215 }, { "Type": 0, "Name": "dfg", "Size": 2, "MTime": 1616836228 }, { "Type": 1, "Name": "xyz", "Size": 4096, "MTime": 1616836181 }, { "Type": 1, "Name": "啊啊", "Size": 4096, "MTime": 1616836190 }, { "Type": 1, "Name": "哦哦", "Size": 4096, "MTime": 1616836197 }]
+    const rootElement = document.getElementById('root')
+    const fileList = document.createElement('div')
+    fileList.className = 'fileList'
+    rootElement.appendChild(fileList)
+    fileInfos.sort((a, b) => {
+      if (a.Type === b.Type) return a.Name.localeCompare(b.Name, 'zh-CN')
+      return a.Type < b.Type
+    })
+
+    const header = document.createElement('div')
+    header.className = 'header'
+    header.appendChild(createGoToParentSvg())
+    header.appendChild(createRefreshSvg())
+    header.appendChild(createHomeSvg())
+    const currentPath = document.createElement('div')
+    currentPath.className = 'path'
+    currentPath.innerHTML = '/home/nian/Git/share-Go'
+    header.appendChild(currentPath)
+    header.appendChild(createPasteSvg())
+    header.appendChild(createNewDirSvg())
+    header.appendChild(createNewFileSvg())
+    header.appendChild(createSortSvg())
+    fileList.appendChild(header)
+
+    fileInfos.forEach(({ Type, Name, Size, MTime }) => {
+      const item = document.createElement('div')
+      item.className = 'file'
+
+      const detailsItem = document.createElement('div')
+      detailsItem.className = 'filedetails'
+
+      const iconItem = document.createElement('div')
+      iconItem.className = 'fileicon'
+      iconItem.appendChild(Type === 1 ? createDirSvg() : createFileSvg())
+      detailsItem.appendChild(iconItem)
+
+      const nameItem = document.createElement('div')
+      nameItem.className = 'filename'
+      nameItem.innerHTML = Name
+      detailsItem.appendChild(nameItem)
+
+      const menuItem = document.createElement('div')
+      menuItem.className = 'filemenu'
+      menuItem.appendChild(createMenuSvg())
+      detailsItem.appendChild(menuItem)
+      item.appendChild(detailsItem)
+
+      const sizeItem = document.createElement('div')
+      sizeItem.className = 'filesize'
+      sizeItem.innerHTML = calcFromBytes(Size)
+      item.appendChild(sizeItem)
+
+      const timeItem = document.createElement('div')
+      timeItem.className = 'filetime'
+      timeItem.title = new Date(MTime*1000).toLocaleString()
+      timeItem.innerHTML = calcRelativeTime(MTime * 1000)
+      item.appendChild(timeItem)
+
+      fileList.appendChild(item)
+    })
+  </script>
+</body>
+
+</html>
