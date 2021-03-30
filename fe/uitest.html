@@ -12,6 +12,7 @@
       width: 75%;
       max-width: 1000px;
       margin: auto;
+      font-family: monospace;
       background-color: #ffffff;
       border: 1px solid #e1e4e8;
       border-radius: 6px;
@@ -62,6 +63,7 @@
     .filedetails {
       display: flex;
       flex-direction: row;
+      align-items: center;
       justify-content: start;
       flex-grow: 7;
       flex-basis: 70%;
@@ -73,6 +75,7 @@
 
     .filename {
       display: flex;
+      margin: 0 8px;
       flex-grow: 1;
     }
 
@@ -140,7 +143,7 @@
       svgItem.setAttribute('viewBox', '0 0 24 24')
       svgItem.setAttribute('width', '24')
       svgItem.setAttribute('height', '24')
-      svgItem.innerHTML = `<path fill="currentColor" d="M20 12c0 1.442-.383 2.79-1.045 3.955l-.738-.738.002-.002-2.778-2.78.707-.706 2.481 2.482A6.946 6.946 0 0 0 19 12c0-3.878-3.122-7-7-7a6.985 6.985 0 0 0-3.217.783l-.738-.738A7.981 7.981 0 0 1 12 4c4.432 0 8 3.568 8 8zm-4.045 6.955A7.981 7.981 0 0 1 12 20c-4.432 0-8-3.568-8-8 0-1.442.383-2.79 1.045-3.955l.684.684.002-.002 2.828 2.828-.707.707-2.479-2.479A6.943 6.943 0 0 0 5 12c0 3.878 3.122 7 7 7a6.985 6.985 0 0 0 3.217-.783z"/>`
+      svgItem.innerHTML = `<path d="M20 12c0 1.442-.383 2.79-1.045 3.955l-.738-.738.002-.002-2.778-2.78.707-.706 2.481 2.482A6.946 6.946 0 0 0 19 12c0-3.878-3.122-7-7-7a6.985 6.985 0 0 0-3.217.783l-.738-.738A7.981 7.981 0 0 1 12 4c4.432 0 8 3.568 8 8zm-4.045 6.955A7.981 7.981 0 0 1 12 20c-4.432 0-8-3.568-8-8 0-1.442.383-2.79 1.045-3.955l.684.684.002-.002 2.828 2.828-.707.707-2.479-2.479A6.943 6.943 0 0 0 5 12c0 3.878 3.122 7 7 7a6.985 6.985 0 0 0 3.217-.783z"/>`
       return svgItem
     }
     const createHomeSvg = () => {

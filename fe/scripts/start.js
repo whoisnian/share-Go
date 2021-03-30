@@ -1,12 +1,12 @@
 const { createServer, request: httpRequest } = require('http')
 const { request: httpsRequest } = require('https')
-// const { resolve } = require('path')
+const { resolve } = require('path')
 const { serve } = require('esbuild')
 const { buildConfig } = require('./esbuild.config')
 
-// const PATH_ROOT = resolve(__dirname, '..')
+const PATH_ROOT = resolve(__dirname, '..')
 // const PATH_OUTPUT = resolve(__dirname, '../dist')
-// const fromRoot = (...args) => resolve(PATH_ROOT, ...args)
+const fromRoot = (...args) => resolve(PATH_ROOT, ...args)
 // const fromOutput = (...args) => resolve(PATH_OUTPUT, ...args)
 
 const exampleHtml = `<!DOCTYPE html>
@@ -43,7 +43,12 @@ const proxyTransform = (url) => {
   return null
 }
 
-serve({}, buildConfig).then(result => {
+serve({
+  servedir: fromRoot('public')
+}, {
+  ...buildConfig,
+  outfile: fromRoot('public/app.js')
+}).then(result => {
   createServer((req, res) => {
     const url = proxyTransform(req.url)
     const proxyReq = request(url || `http://${result.host}:${result.port}${req.url}`, {

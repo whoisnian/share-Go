@@ -1,4 +1,4 @@
-import { fetchGetJSON, fetchGetJSONWithStatus } from 'utils/request'
+import { fetchGetJSONWithStatus } from 'utils/request'
 
 /** @enum { number } */
 const FileType = {
