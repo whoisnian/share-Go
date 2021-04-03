@@ -2,6 +2,7 @@ package httpd
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -80,10 +81,20 @@ func findRoute(node *routeNode, route string) (*routeNode, []string) {
 		} else if res, ok := node.next[fragment]; ok {
 			node = res
 		} else if res, ok := node.next[routeParam]; ok {
-			paramValueList = append(paramValueList, fragment)
+			value, err := url.PathUnescape(fragment)
+			if err != nil {
+				logger.Error("Invalid fragment '", fragment, "' for route: '", route, "'")
+				return nil, nil
+			}
+			paramValueList = append(paramValueList, value)
 			node = res
 		} else if res, ok := node.next[routeAny]; ok {
-			paramValueList = append(paramValueList, strings.Join(fragments[index:], "/"))
+			value, err := url.PathUnescape(strings.Join(fragments[index:], "/"))
+			if err != nil {
+				logger.Error("Invalid fragment '", fragment, "' for route: '", route, "'")
+				return nil, nil
+			}
+			paramValueList = append(paramValueList, value)
 			node = res
 			break
 		} else {
