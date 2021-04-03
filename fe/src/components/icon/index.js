@@ -1,9 +1,12 @@
+import { createElementNS } from 'utils/element'
+
 /** @param { ('file-new'|'file'|'folder-new'|'folder-parent'|'folder'|'home'|'menu'|'paste'|'refresh'|'sort') } name */
 const createIcon = (name) => {
-  const iconElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-  iconElement.setAttribute('viewBox', '0 0 24 24')
-  iconElement.setAttribute('width', '24')
-  iconElement.setAttribute('height', '24')
+  const iconElement = createElementNS('http://www.w3.org/2000/svg', 'svg', {
+    viewBox: '0 0 24 24',
+    width: '24',
+    height: '24'
+  })
 
   if (name === 'file-new') iconElement.innerHTML = '<path d="M5 4v16h9v-1H6V5h8v4h4v6h1V7.992L15.008 4 15 4.01V4H5zm11 11v2h-2v1h2v2h1v-2h2v-1h-2v-2h-1z"/>'
   else if (name === 'file') iconElement.innerHTML = '<path d="M5 20V4h10v.01l.008-.01L19 7.992V20H5zm1-1h12V9h-4V5H6v14z"/>'

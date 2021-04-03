@@ -1,4 +1,4 @@
-/** @returns {string} */
+/** @returns { string } */
 const getPackageVersion = () => __PACKAGE_VERSION__
 
 // Units are K,M,G,T,P (powers of 1024) like `/usr/bin/ls`.
@@ -21,7 +21,31 @@ const calcFromBytes = (raw) => {
   }
 }
 
+const calcRelativeTime = (raw) => {
+  if (typeof raw === 'object') {
+    raw = raw.getTime()
+  }
+  const now = Date.now()
+  const rtf = new Intl.RelativeTimeFormat('en-US', { style: 'long' })
+  if (now - raw < 60000) {
+    return rtf.format(raw - now, 'second')
+  } else if (now - raw < 3600000) {
+    return rtf.format(Math.floor((raw - now) / 60000), 'minute')
+  } else if (now - raw < 86400000) {
+    return rtf.format(Math.floor((raw - now) / 3600000), 'hour')
+  } else if (now - raw < 604800000) {
+    return rtf.format(Math.floor((raw - now) / 86400000), 'day')
+  } else if (now - raw < 2592000000) {
+    return rtf.format(Math.floor((raw - now) / 604800000), 'week')
+  } else if (now - raw < 31104000000) {
+    return rtf.format(Math.floor((raw - now) / 2592000000), 'month')
+  } else {
+    return rtf.format(Math.floor((raw - now) / 31536000000), 'year')
+  }
+}
+
 export {
   getPackageVersion,
-  calcFromBytes
+  calcFromBytes,
+  calcRelativeTime
 }
