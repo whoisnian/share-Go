@@ -17,7 +17,7 @@ const createDirView = async (path) => {
   const fileInfos = content.FileInfos
   fileInfos.sort((a, b) => {
     if (a.Type === b.Type) return a.Name.localeCompare(b.Name, 'zh-CN')
-    return a.Type < b.Type
+    return b.Type - a.Type
   })
 
   const mainElement = createElement('div', { class: 'DirView-main' })
