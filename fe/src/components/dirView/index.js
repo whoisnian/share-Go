@@ -1,5 +1,6 @@
 import { requestListDir } from 'api/storage'
 import { createIcon } from 'components/icon'
+import { createContextMenu } from 'components/contextMenu'
 import { createElement } from 'utils/element'
 import { calcFromBytes, calcRelativeTime } from 'utils/function'
 import './style.css'
@@ -23,42 +24,90 @@ const createDirView = async (path) => {
   const mainElement = createElement('div', { class: 'DirView-main' })
   const header = createElement('div', { class: 'DirView-header' })
   const currentPath = createElement('div', { class: 'DirView-currentPath' })
-  currentPath.innerHTML = decodeURIComponent(path)
+  currentPath.textContent = decodeURIComponent(path)
 
-  const parentIcon = createIcon('folder-parent')
-  parentIcon.onclick = () => { window.history.back() }
+  const parentIcon = createIcon('folder-parent', {
+    class: 'DirView-iconButton',
+    title: 'Go to parent folder'
+  })
   header.appendChild(parentIcon)
-  header.appendChild(createIcon('refresh'))
-  header.appendChild(createIcon('home'))
+
+  const refreshIcon = createIcon('refresh', {
+    class: 'DirView-iconButton',
+    title: 'Refresh'
+  })
+  header.appendChild(refreshIcon)
+
+  const homeIcon = createIcon('home', {
+    class: 'DirView-iconButton',
+    title: 'Go to home'
+  })
+  header.appendChild(homeIcon)
+
   header.appendChild(currentPath)
-  header.appendChild(createIcon('paste'))
-  header.appendChild(createIcon('folder-new'))
-  header.appendChild(createIcon('file-new'))
-  header.appendChild(createIcon('sort'))
+
+  const pasteIcon = createIcon('paste', {
+    class: 'DirView-iconButton',
+    title: 'Copy current path'
+  })
+  header.appendChild(pasteIcon)
+
+  const folderNewIcon = createIcon('folder-new', {
+    class: 'DirView-iconButton',
+    title: 'Create new folder'
+  })
+  header.appendChild(folderNewIcon)
+
+  const fileNewIcon = createIcon('file-new', {
+    class: 'DirView-iconButton',
+    title: 'Create new file'
+  })
+  header.appendChild(fileNewIcon)
+
+  const sortIcon = createIcon('sort', {
+    class: 'DirView-iconButton',
+    title: 'Sort by'
+  })
+  header.appendChild(sortIcon)
+
   mainElement.appendChild(header)
+
+  const {
+    contextMenu: fileMenu,
+    show: showFileMenu
+  } = createContextMenu()
+  mainElement.appendChild(fileMenu)
 
   fileInfos.forEach(({ Type, Name, Size, MTime }) => {
     const item = createElement('div', { class: 'DirView-fileInfo' })
+    item.oncontextmenu = (e) => {
+      e.preventDefault()
+      showFileMenu(e)
+    }
 
     const detailsItem = createElement('div', { class: 'DirView-fileDetails' })
     // 类型图标
-    const iconItem = createElement('div', { class: 'DirView-fileIcon' })
-    iconItem.appendChild(createIcon(Type === 1 ? 'folder' : 'file'))
+    const iconItem = createIcon(Type === 1 ? 'folder' : 'file', { class: 'DirView-fileIcon' })
     detailsItem.appendChild(iconItem)
     // 文件名称
-    const nameItem = createElement('div', { class: 'DirView-fileName' })
-    nameItem.innerHTML = Name
-    nameItem.onclick = () => { window.location.href = '/view' + path + (path.endsWith('/') ? '' : '/') + encodeURIComponent(Name) }
+    const nameItem = createElement('span', { class: 'DirView-fileName' })
+    const nameLink = createElement('a', {
+      class: 'DirView-nameLink',
+      title: Name,
+      href: '/view' + path + (path.endsWith('/') ? '' : '/') + encodeURIComponent(Name)
+    })
+    nameLink.textContent = Name
+    nameItem.appendChild(nameLink)
     detailsItem.appendChild(nameItem)
     // 折叠菜单
-    const menuItem = createElement('div', { class: 'DirView-fileMenu' })
-    menuItem.appendChild(createIcon('menu'))
+    const menuItem = createIcon('menu', { class: 'DirView-iconButton DirView-fileMenu' })
+    menuItem.onclick = showFileMenu
     detailsItem.appendChild(menuItem)
     item.appendChild(detailsItem)
 
     // 文件大小
     const sizeItem = createElement('div', { class: 'DirView-fileSize' })
-    sizeItem.innerHTML = calcFromBytes(Size)
+    sizeItem.textContent = calcFromBytes(Size)
     item.appendChild(sizeItem)
 
     // 修改时间
@@ -66,7 +115,7 @@ const createDirView = async (path) => {
       class: 'DirView-fileMTime',
       title: new Date(MTime * 1000).toLocaleString()
     })
-    mtimeItem.innerHTML = calcRelativeTime(MTime * 1000)
+    mtimeItem.textContent = calcRelativeTime(MTime * 1000)
     item.appendChild(mtimeItem)
 
     mainElement.appendChild(item)
@@ -74,7 +123,7 @@ const createDirView = async (path) => {
 
   if (fileInfos.length === 0) {
     const item = createElement('div', { class: 'DirView-fileInfo' })
-    item.innerHTML = 'Sorry, this is an empty folder.'
+    item.textContent = 'Sorry, this is an empty folder.'
     mainElement.appendChild(item)
   }
 
