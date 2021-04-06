@@ -1,7 +1,8 @@
 import { requestFileInfo } from 'api/storage'
 
-const createFileView = async (path) => {
-  const { ok, status, content: fileInfo } = await requestFileInfo(path)
+/** @param { string } oriPath */
+const createFileView = async (oriPath) => {
+  const { ok, status, content: fileInfo } = await requestFileInfo(oriPath)
   if (!ok) {
     return document.createTextNode(status === 404
       ? 'File not found'

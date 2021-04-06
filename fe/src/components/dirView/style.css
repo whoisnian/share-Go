@@ -25,10 +25,14 @@
   background-color: #f1f8ff;
 }
 
-.DirView-currentPath {
-  display: flex;
+.DirView-pathSpan {
+  display: inline;
   flex-grow: 1;
   margin: 0 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-wrap: break-word;
 }
 
 .DirView-iconButton {

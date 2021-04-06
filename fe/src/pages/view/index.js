@@ -5,14 +5,14 @@ import { getRootElement } from 'utils/element'
 
 const initViewPage = async () => {
   const pathname = window.location.pathname
-  const path = pathname.slice(pathname.indexOf('/view') + 5)
+  const oriPath = pathname.slice(pathname.indexOf('/view') + 5)
 
   let mainElement
-  const { ok, status, content: fileInfo } = await requestFileInfo(path)
+  const { ok, status, content: fileInfo } = await requestFileInfo(oriPath)
   if (ok && fileInfo.Type === FileType.typeRegular) {
-    mainElement = await createFileView(path)
+    mainElement = await createFileView(oriPath)
   } else if (ok && fileInfo.Type === FileType.typeDirectory) {
-    mainElement = await createDirView(path)
+    mainElement = await createDirView(oriPath)
   } else {
     mainElement = document.createTextNode(ok
       ? 'Can not parse fileInfo'

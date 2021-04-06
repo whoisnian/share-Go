@@ -44,8 +44,19 @@ const calcRelativeTime = (raw) => {
   }
 }
 
+/** @param { string } path */
+const cleanPath = (path) => {
+  return path
+}
+
+/** @param { string[] } path */
+const joinPath = (...path) => {
+  return cleanPath(path.join('/'))
+}
+
 export {
   getPackageVersion,
   calcFromBytes,
-  calcRelativeTime
+  calcRelativeTime,
+  joinPath
 }
