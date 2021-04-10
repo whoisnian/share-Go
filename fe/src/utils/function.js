@@ -46,7 +46,34 @@ const calcRelativeTime = (raw) => {
 
 /** @param { string } path */
 const cleanPath = (path) => {
-  return path
+  const len = path.length
+  if (len < 1) return '.'
+
+  const absolute = path[0] === '/'
+  const res = []
+  for (let i = 0; i < len; i++) {
+    if (path[i] === '/') {
+      continue
+    } else if (path[i] === '.' && (i + 1 === len || path[i + 1] === '/')) {
+      continue
+    } else if (path[i] === '.' && path[i + 1] === '.' && (i + 2 === len || path[i + 2] === '/')) {
+      if (res.length === 0) {
+        if (!absolute) res.push('..')
+      } else if (res[res.length - 1] === '..') {
+        res.push('..')
+      } else {
+        res.pop()
+      }
+      i++
+    } else {
+      let field = ''
+      for (; i < len && path[i] !== '/'; i++) {
+        field += path[i]
+      }
+      res.push(field)
+    }
+  }
+  return (absolute ? '/' : '') + res.join('/')
 }
 
 /** @param { string[] } path */

@@ -5,8 +5,7 @@
   "scripts": {
     "start": "NODE_ENV=development node ./scripts/start.js",
     "build": "NODE_ENV=production node ./scripts/build.js",
-    "runT": "NODE_ENV=development esbuild --platform=node --loader=js --sourcefile=t.js --bundle --sourcemap < t.js | node --enable-source-maps",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_ENV=test node ./scripts/test.js"
   },
   "author": "whoisnian",
   "license": "MIT",
