@@ -48,6 +48,15 @@ const createFileItem = (oriPath, fileInfo) => {
   nameLink.textContent = fileInfo.Name
   nameItem.appendChild(nameLink)
   const menuItem = createIcon('menu', { class: 'DirView-iconButton DirView-fileMenu' })
+  menuItem.onclick = (e) => {
+    e.cancelBubble = true
+    fileItem.dispatchEvent(new window.MouseEvent('contextmenu', {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      button: 2,
+      buttons: 2
+    }))
+  }
   detailsItem.appendChild(iconItem)
   detailsItem.appendChild(nameItem)
   detailsItem.appendChild(menuItem)
@@ -91,7 +100,27 @@ const createDirView = async (oriPath) => {
   const {
     contextMenu: fileMenu,
     show: showFileMenu
-  } = createContextMenu()
+  } = createContextMenu([{
+    icon: 'tab-new',
+    name: '新建标签页打开',
+    listener: () => console.log('todo')
+  }, {
+    icon: 'paste',
+    name: '复制链接',
+    listener: () => console.log('todo')
+  }, {
+    icon: 'edit',
+    name: '重命名',
+    listener: () => console.log('todo')
+  }, {
+    icon: 'download',
+    name: '下载',
+    listener: () => console.log('todo')
+  }, {
+    icon: 'delete',
+    name: '删除',
+    listener: () => console.log('todo')
+  }])
   main.appendChild(fileMenu)
 
   fileInfos.forEach(info => {
