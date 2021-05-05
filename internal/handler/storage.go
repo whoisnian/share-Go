@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -121,4 +122,51 @@ func DeleteDirHandler(store httpd.Store) {
 		logger.Panic(err)
 	}
 	store.Respond200(nil)
+}
+
+func DownloadHandler(store httpd.Store) {
+	path := filepath.Join("/", store.RouteAny())
+	info, err := fsStore.FileInfo(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			store.WriteHeader(http.StatusNotFound)
+			store.RespondJson(nil)
+			return
+		}
+		logger.Panic(err)
+	}
+
+	if info.Mode().IsRegular() {
+		file, err := fsStore.GetFile(path)
+		if err != nil {
+			logger.Panic(err)
+		}
+		defer file.Close()
+
+		filename := url.PathEscape(filepath.Base(path))
+		store.ResponseHeader().Add("content-disposition", "attachment; filename*=UTF-8''"+filename+"; filename=\""+filename+"\"")
+
+		writer := store.Writer()
+		if _, err := io.Copy(writer, file); err != nil {
+			store.ResponseHeader().Del("content-disposition")
+			logger.Panic(err)
+		}
+		return
+	} else if info.Mode().IsDir() {
+		filename := filepath.Base(path)
+		if filename == "/" {
+			filename = "root"
+		}
+		filename = url.PathEscape(filename)
+		store.ResponseHeader().Add("content-disposition", "attachment; filename*=UTF-8''"+filename+".zip; filename=\""+filename+".zip\"")
+		if err := fsStore.GetDirAsZip(path, store.Writer()); err != nil {
+			store.ResponseHeader().Del("content-disposition")
+			logger.Panic(err)
+		}
+		return
+	} else {
+		store.WriteHeader(http.StatusUnprocessableEntity)
+		store.RespondJson(nil)
+		return
+	}
 }

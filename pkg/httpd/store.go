@@ -56,6 +56,16 @@ func (store Store) Body() io.ReadCloser {
 	return store.r.Body
 }
 
+// ResponseHeader equals to `http.ResponseWriter.Header()`.
+func (store Store) ResponseHeader() http.Header {
+	return store.w.Header()
+}
+
+// Writer return `*http.ResponseWriter` as `io.Writer`.
+func (store Store) Writer() io.Writer {
+	return store.w
+}
+
 // MultipartReader equals to `http.Request.MultipartReader()`.
 func (store Store) MultipartReader() (*multipart.Reader, error) {
 	return store.r.MultipartReader()

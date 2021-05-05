@@ -31,7 +31,8 @@ const request = (url, ...extraParams) => {
 }
 
 const proxyMap = [
-  ['^/api', 'http://127.0.0.1:9000/api']
+  ['^/api', 'http://127.0.0.1:9000/api'],
+  ['^/download', 'http://127.0.0.1:9000/download']
 ]
 
 const proxyTransform = (url) => {
