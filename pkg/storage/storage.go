@@ -26,8 +26,11 @@ type readCloser struct {
 }
 
 func (r readCloser) Close() error {
+	if err := r.File.Close(); err != nil {
+		return err
+	}
 	r.locker.RUnlock()
-	return r.File.Close()
+	return nil
 }
 
 type writeCloser struct {
@@ -36,8 +39,11 @@ type writeCloser struct {
 }
 
 func (w writeCloser) Close() error {
+	if err := w.File.Close(); err != nil {
+		return err
+	}
 	w.locker.Unlock()
-	return w.File.Close()
+	return nil
 }
 
 // New ...
