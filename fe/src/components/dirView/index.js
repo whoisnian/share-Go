@@ -1,8 +1,8 @@
-import { requestListDir } from 'api/storage'
+import { FileType, requestListDir, requestDeleteRecursively } from 'api/storage'
 import { createIcon } from 'components/icon'
 import { createContextMenu } from 'components/contextMenu'
-import { createElement } from 'utils/element'
-import { calcFromBytes, calcRelativeTime, joinPath } from 'utils/function'
+import { createElement, downloadFile } from 'utils/element'
+import { calcFromBytes, calcRelativeTime, joinPath, openUrl, openUrlInNewTab, reloadPage } from 'utils/function'
 import './style.css'
 
 /** @param { string } oriPath */
@@ -11,11 +11,15 @@ const createHeader = (oriPath) => {
   const header = createElement('div', { class: 'DirView-header' })
 
   const parentIcon = createIcon('folder-parent', { class: 'DirView-iconButton', title: 'Go to parent folder' })
+  parentIcon.onclick = () => openUrl('/view' + joinPath('/', oriPath, '..'))
   const refreshIcon = createIcon('refresh', { class: 'DirView-iconButton', title: 'Refresh' })
+  refreshIcon.onclick = () => reloadPage()
   const homeIcon = createIcon('home', { class: 'DirView-iconButton', title: 'Go to home' })
+  homeIcon.onclick = () => openUrl('/view/')
   const pathSpan = createElement('span', { class: 'DirView-pathSpan', title: currentPath })
   pathSpan.textContent = currentPath
   const pasteIcon = createIcon('paste', { class: 'DirView-iconButton', title: 'Copy current url' })
+  pasteIcon.onclick = () => navigator.clipboard.writeText(window.location.href)
   const folderNewIcon = createIcon('folder-new', { class: 'DirView-iconButton', title: 'Create new folder' })
   const fileNewIcon = createIcon('file-new', { class: 'DirView-iconButton', title: 'Create new file' })
   const sortIcon = createIcon('sort', { class: 'DirView-iconButton', title: 'Sort by' })
@@ -34,7 +38,7 @@ const createHeader = (oriPath) => {
 /** @param { string } oriPath */
 /** @param { import('api/storage').FileInfo } fileInfo */
 const createFileItem = (oriPath, fileInfo) => {
-  const fileItem = createElement('div', { class: 'DirView-fileInfo' })
+  const fileItem = createElement('div', { id: fileInfo.Name, class: 'DirView-fileInfo' })
 
   // 文件详情（图标，名称，菜单）
   const detailsItem = createElement('div', { class: 'DirView-fileDetails' })
@@ -103,11 +107,11 @@ const createDirView = async (oriPath) => {
   } = createContextMenu([{
     icon: 'tab-new',
     name: '新建标签页打开',
-    listener: () => console.log('todo')
+    listener: ({ data }) => openUrlInNewTab(joinPath('/view', oriPath, encodeURIComponent(data.Name)))
   }, {
     icon: 'paste',
-    name: '复制链接',
-    listener: () => console.log('todo')
+    name: '复制下载链接',
+    listener: ({ data }) => navigator.clipboard.writeText(window.location.origin + joinPath('/download', oriPath, encodeURIComponent(data.Name)))
   }, {
     icon: 'edit',
     name: '重命名',
@@ -115,19 +119,24 @@ const createDirView = async (oriPath) => {
   }, {
     icon: 'download',
     name: '下载',
-    listener: () => console.log('todo')
+    listener: ({ data }) => downloadFile(joinPath('/download', oriPath, encodeURIComponent(data.Name)), data.FileType === FileType.typeDirectory ? data.Name + '.zip' : data.Name)
   }, {
     icon: 'delete',
     name: '删除',
-    listener: () => console.log('todo')
+    listener: ({ event, data }) => {
+      requestDeleteRecursively(joinPath(oriPath, encodeURIComponent(data.Name)))
+      let item = event.target
+      while (item.parentElement && (item.className !== 'DirView-fileInfo' || item.id !== data.Name)) item = item.parentElement
+      if (item.className === 'DirView-fileInfo' && item.id === data.Name) item.remove()
+    }
   }])
   main.appendChild(fileMenu)
 
   fileInfos.forEach(info => {
     const fileItem = createFileItem(oriPath, info)
-    fileItem.oncontextmenu = (e) => {
-      e.preventDefault()
-      showFileMenu(e)
+    fileItem.oncontextmenu = (event) => {
+      event.preventDefault()
+      showFileMenu(event, info)
     }
     main.appendChild(fileItem)
   })

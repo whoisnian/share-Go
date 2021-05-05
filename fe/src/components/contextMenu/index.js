@@ -11,6 +11,7 @@ import './style.css'
  */
 const createContextMenu = (items) => {
   const contextMenu = createElement('div', { class: 'ContextMenu-menu' })
+  const contextData = {}
   items.forEach(({ icon, name, listener }) => {
     const menuItem = createElement('div', { class: 'ContextMenu-menuItem' })
     const itemIcon = createIcon(icon, { class: 'ContextMenu-itemIcon' })
@@ -19,18 +20,19 @@ const createContextMenu = (items) => {
 
     menuItem.appendChild(itemIcon)
     menuItem.appendChild(itemName)
-    menuItem.onclick = listener
+    menuItem.onclick = () => listener(contextData)
     contextMenu.appendChild(menuItem)
   })
 
   document.addEventListener('click', () => { contextMenu.style.display = 'none' })
 
-  const show = (event) => {
+  const show = (event, data) => {
+    contextData.event = event
+    contextData.data = data
     event.cancelBubble = true
     contextMenu.style.display = 'flex'
     contextMenu.style.top = event.clientY + 'px'
     contextMenu.style.left = event.clientX + 'px'
-    console.log(event)
   }
 
   return {

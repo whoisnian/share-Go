@@ -28,8 +28,18 @@ const createElementNS = (namespace, tag, options = {}) => {
   return element
 }
 
+const downloadFile = (url, filename) => {
+  const link = createElement('a', {
+    href: url,
+    download: filename
+  })
+  link.click()
+  link.remove()
+}
+
 export {
   getRootElement,
   createElement,
-  createElementNS
+  createElementNS,
+  downloadFile
 }

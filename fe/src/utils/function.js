@@ -81,9 +81,26 @@ const joinPath = (...path) => {
   return cleanPath(path.join('/'))
 }
 
+function reloadPage() {
+  window.location.reload()
+}
+
+/** @param { string } url */
+function openUrl(url) {
+  window.location.href = url
+}
+
+/** @param { string } url */
+function openUrlInNewTab(url) {
+  window.open(url, '_blank')
+}
+
 export {
   getPackageVersion,
   calcFromBytes,
   calcRelativeTime,
-  joinPath
+  joinPath,
+  reloadPage,
+  openUrl,
+  openUrlInNewTab
 }
