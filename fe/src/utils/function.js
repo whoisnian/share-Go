@@ -1,7 +1,7 @@
 /** @returns { string } */
 const getPackageVersion = () => __PACKAGE_VERSION__
 
-// Units are K,M,G,T,P (powers of 1024) like `/usr/bin/ls`.
+/** @returns { string } */
 const calcFromBytes = (raw) => {
   if (typeof raw === 'string') {
     raw = parseInt(raw)
@@ -21,6 +21,7 @@ const calcFromBytes = (raw) => {
   }
 }
 
+/** @returns { string } */
 const calcRelativeTime = (raw) => {
   if (typeof raw === 'object') {
     raw = raw.getTime()

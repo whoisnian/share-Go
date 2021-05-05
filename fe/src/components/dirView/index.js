@@ -3,6 +3,7 @@ import { createIcon } from 'components/icon'
 import { createContextMenu } from 'components/contextMenu'
 import { createElement } from 'utils/element'
 import { calcFromBytes, calcRelativeTime, joinPath } from 'utils/function'
+import { observer } from 'utils/observer'
 import './style.css'
 
 /** @param { string } oriPath */
@@ -76,67 +77,75 @@ const createFileItem = (oriPath, fileInfo) => {
   return fileItem
 }
 
-/** @param { string } oriPath */
-const createDirView = async (oriPath) => {
-  const { ok, status, content } = await requestListDir(oriPath)
-  if (!ok) {
-    return document.createTextNode(status === 404
-      ? 'Dir not found'
-      : 'Unexpected error'
-    )
-  }
-
-  const fileInfos = content.FileInfos
-  fileInfos.sort((a, b) => {
-    if (a.Type === b.Type) return a.Name.localeCompare(b.Name, 'zh-CN')
-    return b.Type - a.Type
-  })
-
-  const main = createElement('div', { class: 'DirView-main' })
-
-  const header = createHeader(oriPath)
-  main.appendChild(header)
-
-  const {
-    contextMenu: fileMenu,
-    show: showFileMenu
-  } = createContextMenu([{
-    icon: 'tab-new',
-    name: '新建标签页打开',
-    listener: () => console.log('todo')
-  }, {
-    icon: 'paste',
-    name: '复制链接',
-    listener: () => console.log('todo')
-  }, {
-    icon: 'edit',
-    name: '重命名',
-    listener: () => console.log('todo')
-  }, {
-    icon: 'download',
-    name: '下载',
-    listener: () => console.log('todo')
-  }, {
-    icon: 'delete',
-    name: '删除',
-    listener: () => console.log('todo')
-  }])
-  main.appendChild(fileMenu)
-
-  fileInfos.forEach(info => {
-    const fileItem = createFileItem(oriPath, info)
-    fileItem.oncontextmenu = (e) => {
-      e.preventDefault()
-      showFileMenu(e)
+const createDirView = async () => {
+  let main = document.createTextNode('loading2...')
+  const render = async (_, oriPath) => {
+    const { ok, status, content } = await requestListDir(oriPath)
+    if (!ok) {
+      return document.createTextNode(status === 404
+        ? 'Dir not found'
+        : 'Unexpected error'
+      )
     }
-    main.appendChild(fileItem)
-  })
 
-  if (fileInfos.length === 0) {
-    const item = createElement('div', { class: 'DirView-fileInfo' })
-    item.textContent = 'Sorry, this is an empty folder.'
-    main.appendChild(item)
+    const fileInfos = content.FileInfos
+    fileInfos.sort((a, b) => {
+      if (a.Type === b.Type) return a.Name.localeCompare(b.Name, 'zh-CN')
+      return b.Type - a.Type
+    })
+
+    const newMain = createElement('div', { class: 'DirView-main' })
+
+    const header = createHeader(oriPath)
+    newMain.appendChild(header)
+
+    const {
+      contextMenu: fileMenu,
+      show: showFileMenu
+    } = createContextMenu([{
+      icon: 'tab-new',
+      name: '新建标签页打开',
+      listener: () => console.log('todo')
+    }, {
+      icon: 'paste',
+      name: '复制链接',
+      listener: () => console.log('todo')
+    }, {
+      icon: 'edit',
+      name: '重命名',
+      listener: () => console.log('todo')
+    }, {
+      icon: 'download',
+      name: '下载',
+      listener: () => console.log('todo')
+    }, {
+      icon: 'delete',
+      name: '删除',
+      listener: () => console.log('todo')
+    }])
+    newMain.appendChild(fileMenu)
+
+    fileInfos.forEach(info => {
+      const fileItem = createFileItem(oriPath, info)
+      fileItem.oncontextmenu = (e) => {
+        e.preventDefault()
+        showFileMenu(e)
+      }
+      newMain.appendChild(fileItem)
+    })
+
+    if (fileInfos.length === 0) {
+      const item = createElement('div', { class: 'DirView-fileInfo' })
+      item.textContent = 'Sorry, this is an empty folder.'
+      newMain.appendChild(item)
+    }
+
+    main.parentElement.replaceChild(newMain, main)
+    main = newMain
   }
+  observer.onchange('oriPath', render)
+
+  render(null, observer.get('oriPath'))
 
   return main
 }
