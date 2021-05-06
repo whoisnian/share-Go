@@ -1,4 +1,4 @@
-import { fetchDeleteHead, fetchGetJSONWithStatus } from 'utils/request'
+import { fetchDeleteHead, fetchGetJSONWithStatus, fetchPostHead } from 'utils/request'
 
 /** @enum { number } */
 const FileType = {
@@ -30,6 +30,11 @@ const requestListDir = async (path) => {
 }
 
 /** @param { string } path */
+const requestCreateDir = async (path) => {
+  await fetchPostHead(`/api/dir${path}`)
+}
+
+/** @param { string } path */
 const requestDeleteRecursively = async (path) => {
   await fetchDeleteHead(`/api/dir${path}`)
 }
@@ -38,5 +43,6 @@ export {
   FileType,
   requestFileInfo,
   requestListDir,
+  requestCreateDir,
   requestDeleteRecursively
 }
