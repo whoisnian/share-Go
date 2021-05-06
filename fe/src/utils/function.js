@@ -28,7 +28,7 @@ const calcRelativeTime = (raw) => {
   const now = Date.now()
   const rtf = new Intl.RelativeTimeFormat('en-US', { style: 'long' })
   if (now - raw < 60000) {
-    return rtf.format(raw - now, 'second')
+    return rtf.format(Math.floor((raw - now) / 1000), 'second')
   } else if (now - raw < 3600000) {
     return rtf.format(Math.floor((raw - now) / 60000), 'minute')
   } else if (now - raw < 86400000) {
