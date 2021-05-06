@@ -132,7 +132,10 @@ func (store *Store) GetDirAsZip(path string, writer io.Writer) error {
 		if err != nil {
 			return err
 		}
-		zipFile, err := zipWriter.Create(relativePath)
+		zipFile, err := zipWriter.CreateHeader(&zip.FileHeader{
+			Name:   relativePath,
+			Method: zip.Store,
+		})
 		if err != nil {
 			return err
 		}
