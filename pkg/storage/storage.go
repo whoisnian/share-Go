@@ -7,8 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-
-	"github.com/whoisnian/share-Go/pkg/logger"
 )
 
 // Store ...
@@ -49,15 +47,15 @@ func (w writeCloser) Close() error {
 }
 
 // New ...
-func New(path string) *Store {
+func New(path string) (*Store, error) {
 	base, err := filepath.Abs(path)
 	if err != nil {
-		logger.Panic(err)
+		return nil, err
 	}
 	if _, err := os.Stat(base); os.IsNotExist(err) {
-		logger.Panic(err)
+		return nil, err
 	}
-	return &Store{base, new(sync.Map)}
+	return &Store{base, new(sync.Map)}, nil
 }
 
 // IsDir ...

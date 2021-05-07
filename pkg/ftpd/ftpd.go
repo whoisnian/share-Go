@@ -25,7 +25,10 @@ func handleConn(conn *ftpConn) {
 
 // Start listens on the addr and then creates goroutine to handle each connection.
 func Start(addr string, rootPath string) {
-	fsStore = storage.New(rootPath)
+	var err error
+	if fsStore, err = storage.New(rootPath); err != nil {
+		logger.Fatal(err)
+	}
 
 	logger.Info("Service ftpd started: <ftp://", addr, ">")
 	listener, err := net.Listen("tcp", addr)
