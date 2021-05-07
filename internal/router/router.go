@@ -19,10 +19,11 @@ func Init() {
 		{"/api/dir/*", "GET", handler.ListDirHandler},
 		{"/api/dir/*", "POST", handler.CreateDirHandler},
 		{"/api/dir/*", "DELETE", handler.DeleteDirHandler},
-		{"/download/*", "GET", handler.DownloadHandler},
 
-		{"/upload", "POST", handler.UploadHandler}, // TODO
-		{"/", "GET", handler.IndexHander},          // TODO
+		{"/api/download/*", "GET", handler.DownloadHandler},
+		{"/api/upload/*", "POST", handler.UploadHandler},
+
+		{"/", "GET", handler.IndexHander}, // TODO
 	}
 
 	for _, route := range routes {

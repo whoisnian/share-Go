@@ -170,3 +170,31 @@ func DownloadHandler(store httpd.Store) {
 		return
 	}
 }
+
+func UploadHandler(store httpd.Store) {
+	reader, err := store.MultipartReader()
+	if err != nil {
+		logger.Panic(err)
+	}
+	for {
+		part, err := reader.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			logger.Panic(err)
+		}
+		if part.FormName() != "fileList" {
+			continue
+		}
+
+		file, err := fsStore.CreateFile(part.FileName())
+		if err != nil {
+			logger.Panic(err)
+		}
+		defer file.Close()
+
+		io.Copy(file, part)
+	}
+	store.Respond200(nil)
+}

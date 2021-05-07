@@ -126,15 +126,15 @@ const createDirView = async (oriPath) => {
   }, {
     icon: 'paste',
     name: '复制下载链接',
-    listener: ({ data }) => navigator.clipboard.writeText(window.location.origin + joinPath('/download', oriPath, encodeURIComponent(data.Name)))
+    listener: ({ data }) => navigator.clipboard.writeText(window.location.origin + joinPath('/api/download', oriPath, encodeURIComponent(data.Name)))
   }, {
     icon: 'edit',
     name: '重命名',
-    listener: () => console.log('todo')
+    listener: () => alert('todo')
   }, {
     icon: 'download',
     name: '下载',
-    listener: ({ data }) => downloadFile(joinPath('/download', oriPath, encodeURIComponent(data.Name)), data.FileType === FileType.typeDirectory ? data.Name + '.zip' : data.Name)
+    listener: ({ data }) => downloadFile(joinPath('/api/download', oriPath, encodeURIComponent(data.Name)), data.FileType === FileType.typeDirectory ? data.Name + '.zip' : data.Name)
   }, {
     icon: 'delete',
     name: '删除',
