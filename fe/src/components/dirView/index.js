@@ -70,8 +70,8 @@ const createFileItem = (oriPath, fileInfo) => {
   menuItem.onclick = (e) => {
     e.cancelBubble = true
     fileItem.dispatchEvent(new window.MouseEvent('contextmenu', {
-      clientX: e.clientX,
-      clientY: e.clientY,
+      pageX: e.pageX,
+      pageY: e.pageY,
       button: 2,
       buttons: 2
     }))

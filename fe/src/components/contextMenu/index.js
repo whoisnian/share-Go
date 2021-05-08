@@ -31,8 +31,8 @@ const createContextMenu = (items) => {
     contextData.data = data
     event.cancelBubble = true
     contextMenu.style.display = 'flex'
-    contextMenu.style.top = event.clientY + 'px'
-    contextMenu.style.left = event.clientX + 'px'
+    contextMenu.style.top = event.pageY + 'px'
+    contextMenu.style.left = event.pageX + 'px'
   }
 
   return {
