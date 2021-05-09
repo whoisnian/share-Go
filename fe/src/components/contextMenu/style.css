@@ -11,6 +11,7 @@
 .ContextMenu-menuItem {
   display: flex;
   cursor: pointer;
+  user-select: none;
   flex-direction: row;
   justify-content: left;
   align-items: center;

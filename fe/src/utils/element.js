@@ -37,9 +37,19 @@ const downloadFile = (url, filename) => {
   link.remove()
 }
 
+const chooseFile = (listener, multiple) => {
+  const input = createElement('input', { type: 'file', multiple })
+  input.onchange = () => {
+    listener(input.files)
+    input.remove()
+  }
+  input.click()
+}
+
 export {
   getRootElement,
   createElement,
   createElementNS,
-  downloadFile
+  downloadFile,
+  chooseFile
 }

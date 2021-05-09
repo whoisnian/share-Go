@@ -2,6 +2,7 @@ import { FileType, requestListDir, requestDeleteRecursively, requestCreateDir } 
 import { createIcon } from 'components/icon'
 import { createContextMenu } from 'components/contextMenu'
 import { createInputDialog } from 'components/inputDialog'
+import { createUploadDialog } from 'components/uploadDialog'
 import { createElement, downloadFile } from 'utils/element'
 import { calcFromBytes, calcRelativeTime, joinPath, openUrl, openUrlInNewTab, reloadPage } from 'utils/function'
 import './style.css'
@@ -37,6 +38,17 @@ const createHeader = (oriPath) => {
     inputDialog.focus()
   }
   const fileNewIcon = createIcon('file-new', { class: 'DirView-iconButton', title: 'Create new file' })
+  fileNewIcon.onclick = () => {
+    const uploadDialog = createUploadDialog(joinPath('/', oriPath))
+    const removeSelf = (event) => {
+      if (event.target === uploadDialog) {
+        uploadDialog.remove()
+        document.removeEventListener('click', removeSelf)
+      }
+    }
+    document.addEventListener('click', removeSelf)
+    header.appendChild(uploadDialog)
+  }
   const sortIcon = createIcon('sort', { class: 'DirView-iconButton', title: 'Sort by' })
 
   header.appendChild(parentIcon)

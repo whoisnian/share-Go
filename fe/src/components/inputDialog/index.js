@@ -11,7 +11,7 @@ const createInputDialog = (name, preset, listener) => {
   const popup = createElement('div', { class: 'InputDialog-popup' })
   const header = createElement('div', { class: 'InputDialog-header' })
   header.textContent = name
-  const input = createElement('input', { class: 'InputDialog-input' })
+  const input = createElement('input', { class: 'InputDialog-input', type: 'text' })
   input.value = preset
   inputDialog.focus = () => {
     input.focus()

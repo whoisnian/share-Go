@@ -41,6 +41,7 @@
   fill: currentColor;
   border-radius: 3px;
   cursor: pointer;
+  user-select: none;
 }
 
 .DirView-iconButton:hover {
