@@ -1,4 +1,5 @@
 import { createElement, chooseFile } from 'utils/element'
+import { requestCreateFiles } from 'api/storage'
 import './style.css'
 
 /**
@@ -40,12 +41,13 @@ const createUploadDialog = (base) => {
   const uploadContent = createElement('input', { class: 'UploadDialog-input', type: 'text', readonly: true })
   uploadButton.onclick = () => {
     chooseFile((fileList) => {
-      console.log(fileList)
+      requestCreateFiles(base, fileList)
       if (fileList && fileList.length === 1) {
         uploadContent.value = fileList[0].name
       } else if (fileList && fileList.length > 1) {
         uploadContent.value = `Choosed ${fileList.length} files.`
       }
+      uploadDialog.remove()
     }, true)
   }
   fromLocal.tabContent.appendChild(uploadButton)

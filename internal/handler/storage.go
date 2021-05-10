@@ -172,6 +172,7 @@ func DownloadHandler(store httpd.Store) {
 }
 
 func UploadHandler(store httpd.Store) {
+	path := filepath.Join("/", store.RouteAny())
 	reader, err := store.MultipartReader()
 	if err != nil {
 		logger.Panic(err)
@@ -188,7 +189,7 @@ func UploadHandler(store httpd.Store) {
 			continue
 		}
 
-		file, err := fsStore.CreateFile(part.FileName())
+		file, err := fsStore.CreateFile(filepath.Join(path, part.FileName()))
 		if err != nil {
 			logger.Panic(err)
 		}
