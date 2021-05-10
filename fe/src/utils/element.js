@@ -46,10 +46,23 @@ const chooseFile = (listener, multiple) => {
   input.click()
 }
 
+const copyText = (text) => {
+  if (window.navigator && window.isSecureContext) {
+    window.navigator.clipboard.writeText(text)
+  } else {
+    const input = createElement('input', { type: 'text', style: 'position:fixed;', value: text })
+    document.body.appendChild(input)
+    input.select()
+    document.execCommand('copy')
+    input.remove()
+  }
+}
+
 export {
   getRootElement,
   createElement,
   createElementNS,
   downloadFile,
-  chooseFile
+  chooseFile,
+  copyText
 }
