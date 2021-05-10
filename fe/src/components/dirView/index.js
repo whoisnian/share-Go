@@ -80,13 +80,8 @@ const createFileItem = (oriPath, fileInfo) => {
   nameItem.appendChild(nameLink)
   const menuItem = createIcon('menu', { class: 'DirView-iconButton DirView-fileMenu' })
   menuItem.onclick = (e) => {
-    e.cancelBubble = true
-    fileItem.dispatchEvent(new window.MouseEvent('contextmenu', {
-      pageX: e.pageX,
-      pageY: e.pageY,
-      button: 2,
-      buttons: 2
-    }))
+    e.preventDefault()
+    fileItem.showFileMenu(e)
   }
   detailsItem.appendChild(iconItem)
   detailsItem.appendChild(nameItem)
@@ -161,9 +156,10 @@ const createDirView = async (oriPath) => {
 
   fileInfos.forEach(info => {
     const fileItem = createFileItem(oriPath, info)
+    fileItem.showFileMenu = (event) => showFileMenu(event, info)
     fileItem.oncontextmenu = (event) => {
       event.preventDefault()
-      showFileMenu(event, info)
+      fileItem.showFileMenu(event)
     }
     main.appendChild(fileItem)
   })
