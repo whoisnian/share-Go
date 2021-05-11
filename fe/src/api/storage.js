@@ -32,15 +32,15 @@ const requestListDir = async (path) => {
 /** @param { string } path */
 /** @param { FileList } files */
 const requestCreateFiles = async (path, files) => {
-  const formData = new FormData()
   for (let i = 0; i < files.length; i++) {
+    const formData = new FormData()
     formData.append('fileList', files[i])
+    await window.fetch(`/api/upload${path}`, {
+      credentials: 'same-origin',
+      method: 'POST',
+      body: formData
+    })
   }
-  await window.fetch(`/api/upload${path}`, {
-    credentials: 'same-origin',
-    method: 'POST',
-    body: formData
-  })
 }
 
 /** @param { string } path */
