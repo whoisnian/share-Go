@@ -44,6 +44,20 @@ const requestCreateFiles = async (path, files) => {
 }
 
 /** @param { string } path */
+/** @param { string[] } urlList */
+const requestDownloadFiles = async (path, urlList) => {
+  const formData = new FormData()
+  for (let i = 0; i < urlList.length; i++) {
+    formData.append('urlList', urlList[i])
+  }
+  await window.fetch(`/api/upload${path}`, {
+    credentials: 'same-origin',
+    method: 'POST',
+    body: formData
+  })
+}
+
+/** @param { string } path */
 const requestCreateDir = async (path) => {
   await fetchPostHead(`/api/dir${path}`)
 }
@@ -58,6 +72,7 @@ export {
   requestFileInfo,
   requestListDir,
   requestCreateFiles,
+  requestDownloadFiles,
   requestCreateDir,
   requestDeleteRecursively
 }

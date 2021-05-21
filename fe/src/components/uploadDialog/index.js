@@ -1,5 +1,5 @@
 import { createElement, chooseFile } from 'utils/element'
-import { requestCreateFiles } from 'api/storage'
+import { requestCreateFiles, requestDownloadFiles } from 'api/storage'
 import { reloadPage } from 'utils/function'
 import './style.css'
 
@@ -62,13 +62,21 @@ const createUploadDialog = (base) => {
   // 输入 url 从远端下载
   const fromUrl = createElement('div', { class: 'UploadDialog-tabItem' })
   fromUrl.textContent = 'From Url'
-  fromUrl.tabContent = createElement('div', { class: 'UploadDialog-tabContent'})
+  fromUrl.tabContent = createElement('div', { class: 'UploadDialog-tabContent' })
   const input = createElement('input', { class: 'UploadDialog-input', type: 'text' })
   const button = createElement('div', { class: 'UploadDialog-button' })
   button.textContent = 'OK'
   button.onclick = () => {
-    console.log(input.value)
-    uploadDialog.remove()
+    if (input.value?.length > 0) {
+      const urlList = input.value.split(/[,，]/)
+      requestDownloadFiles(base, urlList).then(() => {
+        uploadDialog.remove()
+        reloadPage()
+      }).catch((e) => {
+        console.error(e)
+        uploadDialog.remove()
+      })
+    }
   }
   fromUrl.tabContent.appendChild(input)
   fromUrl.tabContent.appendChild(button)

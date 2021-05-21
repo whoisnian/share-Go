@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"syscall"
 
@@ -171,12 +172,28 @@ func DownloadHandler(store httpd.Store) {
 	}
 }
 
+func createDownloadTask(url string, dir string) func() {
+	return func() {
+		file, err := fsStore.CreateFile(filepath.Join(dir, path.Base(url)))
+		if err != nil {
+			return
+		}
+		defer file.Close()
+
+		if resp, err := http.Get(url); err == nil {
+			defer resp.Body.Close()
+			io.Copy(file, resp.Body)
+		}
+	}
+}
+
 func UploadHandler(store httpd.Store) {
 	path := filepath.Join("/", store.RouteAny())
 	reader, err := store.MultipartReader()
 	if err != nil {
 		logger.Panic(err)
 	}
+	shortestQueue := downloadTaskLane.ShortestQueueIndex()
 	for {
 		part, err := reader.NextPart()
 		if err == io.EOF {
@@ -185,17 +202,20 @@ func UploadHandler(store httpd.Store) {
 		if err != nil {
 			logger.Panic(err)
 		}
-		if part.FormName() != "fileList" {
-			continue
+		if part.FormName() == "urlList" {
+			url, err := io.ReadAll(part)
+			if err != nil {
+				logger.Panic(err)
+			}
+			downloadTaskLane.PushTask(createDownloadTask(string(url), path), shortestQueue)
+		} else if part.FormName() == "fileList" {
+			file, err := fsStore.CreateFile(filepath.Join(path, part.FileName()))
+			if err != nil {
+				logger.Panic(err)
+			}
+			defer file.Close()
+			io.Copy(file, part)
 		}
-
-		file, err := fsStore.CreateFile(filepath.Join(path, part.FileName()))
-		if err != nil {
-			logger.Panic(err)
-		}
-		defer file.Close()
-
-		io.Copy(file, part)
 	}
 	store.Respond200(nil)
 }

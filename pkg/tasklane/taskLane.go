@@ -2,7 +2,6 @@ package tasklane
 
 import (
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -72,11 +71,22 @@ func New(laneSize, queueSize int) *TaskLane {
 	return taskLane
 }
 
-func (taskLane *TaskLane) ShowStatus() {
+func (taskLane *TaskLane) Status() []int {
+	status := make([]int, taskLane.laneSize)
 	for i := 0; i < taskLane.laneSize; i++ {
-		fmt.Print(len(taskLane.queueList[i]), " ")
+		status[i] = len(taskLane.queueList[i])
 	}
-	fmt.Print("\n")
+	return status
+}
+
+func (taskLane *TaskLane) ShortestQueueIndex() int {
+	index := 0
+	for i := 1; i < taskLane.laneSize; i++ {
+		if len(taskLane.queueList[i]) < len(taskLane.queueList[index]) {
+			index = i
+		}
+	}
+	return index
 }
 
 func (taskLane *TaskLane) PushTask(taskFunc func(), index int) error {
