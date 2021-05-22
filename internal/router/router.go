@@ -24,7 +24,7 @@ func Init() {
 		{"/api/upload/*", "POST", handler.UploadHandler},
 
 		{"/view/*", "GET", handler.ViewHander},
-		{"/", "GET", handler.IndexHandler},
+		{"/*", "GET", handler.IndexHandler},
 	}
 
 	for _, route := range routes {

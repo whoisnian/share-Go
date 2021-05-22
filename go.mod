@@ -1,3 +1,3 @@
 module github.com/whoisnian/share-Go
 
-go 1.15
+go 1.16
