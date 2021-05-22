@@ -1,11 +1,8 @@
-const { resolve } = require('path')
+const { htmlTemplatePlugin, copyPlugin } = require('./plugin')
+const { fromRoot, fromOutput } = require('./function')
 const { version } = require('../package.json')
 
 const isProduction = process.env.NODE_ENV === 'production'
-const PATH_ROOT = resolve(__dirname, '..')
-const PATH_OUTPUT = resolve(__dirname, '../dist')
-const fromRoot = (...args) => resolve(PATH_ROOT, ...args)
-const fromOutput = (...args) => resolve(PATH_OUTPUT, ...args)
 
 module.exports.buildConfig = {
   platform: 'browser',
@@ -13,5 +10,12 @@ module.exports.buildConfig = {
   minify: isProduction,
   define: { __PACKAGE_VERSION__: `"${version}"` },
   entryPoints: [fromRoot('src/app.js')],
-  outfile: fromOutput('app.js')
+  entryNames: '[name]-[hash]',
+  outdir: fromOutput('static'),
+  logLevel: 'info',
+  metafile: true,
+  plugins: [
+    htmlTemplatePlugin(fromOutput()),
+    copyPlugin(fromRoot('public'), fromOutput())
+  ]
 }

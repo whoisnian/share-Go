@@ -1,28 +1,9 @@
 const { createServer, request: httpRequest } = require('http')
 const { request: httpsRequest } = require('https')
-const { resolve } = require('path')
 const { serve } = require('esbuild')
+const { generateHtmlFromTemplate, copyPlugin } = require('./plugin')
+const { fromRoot, fromOutput } = require('./function')
 const { buildConfig } = require('./esbuild.config')
-
-const PATH_ROOT = resolve(__dirname, '..')
-// const PATH_OUTPUT = resolve(__dirname, '../dist')
-const fromRoot = (...args) => resolve(PATH_ROOT, ...args)
-// const fromOutput = (...args) => resolve(PATH_OUTPUT, ...args)
-
-const exampleHtml = `<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Example</title>
-    <link rel="stylesheet" href="/app.css">
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <main id="root"></main>
-    <script src="/app.js"></script>
-  </body>
-</html>`
 
 const request = (url, ...extraParams) => {
   return url.startsWith('https')
@@ -45,12 +26,18 @@ const proxyTransform = (url) => {
 }
 
 serve({
-  servedir: fromRoot('public')
+  servedir: fromOutput()
 }, {
   ...buildConfig,
-  outfile: fromRoot('public/app.js')
+  entryNames: '[name]',
+  plugins: [copyPlugin(fromRoot('public'), fromOutput())]
 }).then(result => {
   createServer((req, res) => {
+    if (req.url === '/') {
+      res.writeHead(302, { 'location': '/view/' })
+      res.end()
+      return
+    }
     const url = proxyTransform(req.url)
     const proxyReq = request(url || `http://${result.host}:${result.port}${req.url}`, {
       method: req.method,
@@ -58,7 +45,10 @@ serve({
     }, proxyRes => {
       if (proxyRes.statusCode === 404 && url === null) {
         res.writeHead(200, { 'content-type': 'text/html' })
-        res.end(exampleHtml)
+        res.end(generateHtmlFromTemplate({
+          stylesheetList: ['/static/app.css'],
+          scriptList: ['/static/app.js']
+        }))
         return
       }
 

@@ -23,7 +23,8 @@ func Init() {
 		{"/api/download/*", "GET", handler.DownloadHandler},
 		{"/api/upload/*", "POST", handler.UploadHandler},
 
-		{"/", "GET", handler.IndexHander}, // TODO
+		{"/view/*", "GET", handler.ViewHander},
+		{"/", "GET", handler.IndexHandler},
 	}
 
 	for _, route := range routes {

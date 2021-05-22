@@ -1,4 +1,7 @@
 const { build } = require('esbuild')
 const { buildConfig } = require('./esbuild.config')
 
-build(buildConfig).catch(() => process.exit(1))
+build(buildConfig).catch((err) => {
+  console.error(err)
+  process.exit(1)
+})

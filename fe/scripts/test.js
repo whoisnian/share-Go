@@ -2,10 +2,9 @@ const { readdirSync } = require('fs')
 const { resolve } = require('path')
 const { spawnSync } = require('child_process')
 const { buildSync } = require('esbuild')
+const { fromRoot } = require('./function')
 const { buildConfig } = require('./esbuild.config')
 
-const PATH_ROOT = resolve(__dirname, '..')
-const fromRoot = (...args) => resolve(PATH_ROOT, ...args)
 const execNode = (code) => spawnSync('node', ['--enable-source-maps'], { cwd: fromRoot(), input: code })
 
 const runTest = (path) => {
@@ -14,7 +13,9 @@ const runTest = (path) => {
       ...buildConfig,
       platform: 'node',
       entryPoints: [path],
+      outdir: undefined,
       outfile: undefined,
+      plugins: undefined,
       write: false
       // sourcemap: 'inline'
     })
