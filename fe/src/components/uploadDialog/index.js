@@ -40,14 +40,19 @@ const createUploadDialog = (base) => {
   const uploadButton = createElement('label', { class: 'UploadDialog-button' })
   uploadButton.textContent = 'Browse'
   const uploadContent = createElement('input', { class: 'UploadDialog-input', type: 'text', readonly: true })
+  const updateProgress = (fileIndex, fileTotal, dataLoaded, dataTotal) => {
+    uploadButton.textContent = dataTotal ? `${Math.round(100 * dataLoaded / dataTotal)} %` : `Uploading`
+    uploadContent.value = `Uploading ${fileIndex + 1} of ${fileTotal} files.`
+  }
   uploadButton.onclick = () => {
     chooseFile((fileList) => {
+      uploadButton.textContent = 'Ready'
       if (fileList && fileList.length === 1) {
         uploadContent.value = fileList[0].name
       } else if (fileList && fileList.length > 1) {
         uploadContent.value = `Choosed ${fileList.length} files.`
       }
-      requestCreateFiles(base, fileList).then(() => {
+      requestCreateFiles(base, fileList, updateProgress).then(() => {
         uploadDialog.remove()
         reloadPage()
       }).catch((e) => {

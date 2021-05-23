@@ -31,15 +31,30 @@ const requestListDir = async (path) => {
 
 /** @param { string } path */
 /** @param { FileList } files */
-const requestCreateFiles = async (path, files) => {
+/** @param { Function } updateProgress */
+const requestCreateFiles = async (path, files, updateProgress) => {
   for (let i = 0; i < files.length; i++) {
     const formData = new FormData()
     formData.append('fileList', files[i])
-    await window.fetch(`/api/upload${path}`, {
-      credentials: 'same-origin',
-      method: 'POST',
-      body: formData
+
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.withCredentials = true
+      xhr.onload = () => {
+        if (200 <= xhr.status && xhr.status < 300) resolve(xhr.response)
+        else reject(xhr.status)
+      }
+      xhr.onerror = () => reject(xhr.status)
+      xhr.upload.onprogress = (event) => updateProgress(i, files.length, event.loaded, event.total)
+      xhr.open('POST', `/api/upload${path}`)
+      xhr.send(formData)
     })
+
+    // await window.fetch(`/api/upload${path}`, {
+    //   credentials: 'same-origin',
+    //   method: 'POST',
+    //   body: formData
+    // })
   }
 }
 
