@@ -20,6 +20,7 @@ func Init() {
 		{"/api/dir/*", "POST", handler.CreateDirHandler},
 		{"/api/dir/*", "DELETE", handler.DeleteDirHandler},
 
+		{"/api/raw/*", "GET", handler.RawHandler},
 		{"/api/download/*", "GET", handler.DownloadHandler},
 		{"/api/upload/*", "POST", handler.UploadHandler},
 

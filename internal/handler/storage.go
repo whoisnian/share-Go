@@ -125,6 +125,37 @@ func DeleteDirHandler(store httpd.Store) {
 	store.Respond200(nil)
 }
 
+func RawHandler(store httpd.Store) {
+	path := filepath.Join("/", store.RouteAny())
+	info, err := fsStore.FileInfo(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			store.WriteHeader(http.StatusNotFound)
+			store.RespondJson(nil)
+			return
+		}
+		logger.Panic(err)
+	}
+
+	if info.Mode().IsRegular() {
+		file, err := fsStore.GetFile(path)
+		if err != nil {
+			logger.Panic(err)
+		}
+		defer file.Close()
+
+		writer := store.Writer()
+		if _, err := io.Copy(writer, file); err != nil {
+			logger.Panic(err)
+		}
+		return
+	} else {
+		store.WriteHeader(http.StatusUnprocessableEntity)
+		store.RespondJson(nil)
+		return
+	}
+}
+
 func DownloadHandler(store httpd.Store) {
 	path := filepath.Join("/", store.RouteAny())
 	info, err := fsStore.FileInfo(path)
