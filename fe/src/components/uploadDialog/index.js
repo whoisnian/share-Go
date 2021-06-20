@@ -44,22 +44,24 @@ const createUploadDialog = (base) => {
     uploadButton.textContent = dataTotal ? `${Math.round(100 * dataLoaded / dataTotal)} %` : `Uploading`
     uploadContent.value = `Uploading ${fileIndex + 1} of ${fileTotal} files.`
   }
+  // TODO: 修改 export 该方法的实现方式
+  uploadDialog.uploadFiles = (fileList) => {
+    uploadButton.textContent = 'Ready'
+    if (fileList && fileList.length === 1) {
+      uploadContent.value = fileList[0].name
+    } else if (fileList && fileList.length > 1) {
+      uploadContent.value = `Choosed ${fileList.length} files.`
+    }
+    requestCreateFiles(base, fileList, updateProgress).then(() => {
+      uploadDialog.remove()
+      reloadPage()
+    }).catch((e) => {
+      console.error(e)
+      uploadDialog.remove()
+    })
+  }
   uploadButton.onclick = () => {
-    chooseFile((fileList) => {
-      uploadButton.textContent = 'Ready'
-      if (fileList && fileList.length === 1) {
-        uploadContent.value = fileList[0].name
-      } else if (fileList && fileList.length > 1) {
-        uploadContent.value = `Choosed ${fileList.length} files.`
-      }
-      requestCreateFiles(base, fileList, updateProgress).then(() => {
-        uploadDialog.remove()
-        reloadPage()
-      }).catch((e) => {
-        console.error(e)
-        uploadDialog.remove()
-      })
-    }, true)
+    chooseFile(uploadDialog.uploadFiles, true)
   }
   fromLocal.tabContent.appendChild(uploadButton)
   fromLocal.tabContent.appendChild(uploadContent)

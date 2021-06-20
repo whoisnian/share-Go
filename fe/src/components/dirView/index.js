@@ -120,6 +120,22 @@ const createDirView = async (oriPath) => {
 
   const main = createElement('div', { class: 'DirView-main' })
 
+  // Drag-and-Drop File Uploader
+  main.ondragenter = main.ondragover = (e) => e.preventDefault()
+  main.ondrop = (e) => {
+    const uploadDialog = createUploadDialog(joinPath('/', oriPath))
+    const removeSelf = (event) => {
+      if (event.target === uploadDialog) {
+        uploadDialog.remove()
+        document.removeEventListener('click', removeSelf)
+      }
+    }
+    document.addEventListener('click', removeSelf)
+    main.appendChild(uploadDialog)
+    uploadDialog.uploadFiles(e.dataTransfer.files)
+    e.preventDefault()
+  }
+
   const header = createHeader(oriPath)
   main.appendChild(header)
 
