@@ -11,7 +11,7 @@ import (
 	"github.com/whoisnian/share-Go/pkg/util"
 )
 
-const routeAny string = "/*"
+const routeAny string = "/:any"
 const routeParam string = "/:param"
 
 var methodList = map[string]string{
@@ -24,6 +24,7 @@ var methodList = map[string]string{
 	"OPTIONS": "/options",
 	"TRACE":   "/trace",
 	"PATCH":   "/patch",
+	"*":       "/*",
 }
 
 type nodeData struct {
@@ -130,8 +131,7 @@ func (mux *serveMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	methodTag, ok := methodList[r.Method]
 	if !ok {
-		store.Respond404("HTTP method not found")
-		return
+		methodTag = methodList["*"]
 	}
 	node, paramValueList := findRoute(mux.root, r.URL.EscapedPath())
 	if node == nil {
@@ -142,12 +142,20 @@ func (mux *serveMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res, ok := node.next[methodTag]
 	if !ok {
 		// If there is no handler for route "/foo/bar", try "/foo/bar/:param" and "/foo/bar/*".
-		if node.next[routeParam] != nil && node.next[routeParam].next[methodTag] != nil {
+		if node.next["/*"] != nil {
+			res = node.next["/*"]
+		} else if node.next[routeParam] != nil && node.next[routeParam].next[methodTag] != nil {
 			paramValueList = append(paramValueList, "")
 			res = node.next[routeParam].next[methodTag]
+		} else if node.next[routeParam] != nil && node.next[routeParam].next["/*"] != nil {
+			paramValueList = append(paramValueList, "")
+			res = node.next[routeParam].next["/*"]
 		} else if node.next[routeAny] != nil && node.next[routeAny].next[methodTag] != nil {
 			paramValueList = append(paramValueList, "")
 			res = node.next[routeAny].next[methodTag]
+		} else if node.next[routeAny] != nil && node.next[routeAny].next["/*"] != nil {
+			paramValueList = append(paramValueList, "")
+			res = node.next[routeAny].next["/*"]
 		} else {
 			store.Respond404("Route not found")
 			return

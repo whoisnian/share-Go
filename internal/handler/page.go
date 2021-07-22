@@ -46,7 +46,7 @@ func serveFileFromFE(store httpd.Store, path string) {
 	}
 }
 
-func ViewHander(store httpd.Store) {
+func ViewHandler(store httpd.Store) {
 	serveFileFromFE(store, "static/index.html")
 }
 

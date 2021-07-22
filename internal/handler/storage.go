@@ -250,3 +250,7 @@ func UploadHandler(store httpd.Store) {
 	}
 	store.Respond200(nil)
 }
+
+func WebDAVHander(store httpd.Store) {
+	httpd.CreateHandler(webdavHander.ServeHTTP)(store)
+}

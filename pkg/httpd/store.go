@@ -25,6 +25,10 @@ type Store struct {
 	m map[string]string
 }
 
+func CreateHandler(httpHandler http.HandlerFunc) func(Store) {
+	return func(store Store) { httpHandler(store.w, store.r) }
+}
+
 // RouteParam returns the value of specified route param, or empty string if param not found.
 func (store Store) RouteParam(name string) string {
 	if param, ok := store.m[name]; ok {

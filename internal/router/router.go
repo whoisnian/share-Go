@@ -24,7 +24,8 @@ func Init() {
 		{"/api/download/*", "GET", handler.DownloadHandler},
 		{"/api/upload/*", "POST", handler.UploadHandler},
 
-		{"/view/*", "GET", handler.ViewHander},
+		{"/webdav/*", "*", handler.WebDAVHander},
+		{"/view/*", "GET", handler.ViewHandler},
 		{"/*", "GET", handler.IndexHandler},
 	}
 
