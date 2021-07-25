@@ -3,10 +3,9 @@ package config
 import (
 	"encoding/json"
 	"flag"
-	"io/ioutil"
 	"os"
 
-	"github.com/whoisnian/share-Go/pkg/logger"
+	"github.com/whoisnian/glb/logger"
 )
 
 // Debug example: `true`.
@@ -38,41 +37,14 @@ var configFilePath = flag.String("c", "config.json", "Specify a path to a custom
 // Init load config options from specified json file.
 func Init() {
 	flag.Parse()
-	loadFromJSON()
-}
 
-func loadFromJSON() {
 	fi, err := os.Open(*configFilePath)
 	if err != nil {
 		logger.Fatal(err)
 	}
 	defer fi.Close()
-
-	content, err := ioutil.ReadAll(fi)
+	err = json.NewDecoder(fi).Decode(configInstance)
 	if err != nil {
 		logger.Fatal(err)
-	}
-
-	err = json.Unmarshal(content, configInstance)
-	if err != nil {
-		logger.Fatal(err)
-	}
-}
-
-func saveAsJSON() {
-	fi, err := os.OpenFile(*configFilePath, os.O_WRONLY, 0)
-	if err != nil {
-		logger.Panic(err)
-	}
-	defer fi.Close()
-
-	content, err := json.MarshalIndent(configInstance, "", "  ")
-	if err != nil {
-		logger.Panic(err)
-	}
-
-	_, err = fi.Write(content)
-	if err != nil {
-		logger.Panic(err)
 	}
 }

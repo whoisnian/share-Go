@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/whoisnian/share-Go/pkg/logger"
+	"github.com/whoisnian/glb/logger"
 )
 
 type ftpConn struct {

@@ -3,7 +3,7 @@ package ftpd
 import (
 	"net"
 
-	"github.com/whoisnian/share-Go/pkg/logger"
+	"github.com/whoisnian/glb/logger"
 	"github.com/whoisnian/share-Go/pkg/storage"
 )
 
@@ -30,7 +30,6 @@ func Start(addr string, rootPath string) {
 		logger.Fatal(err)
 	}
 
-	logger.Info("Service ftpd started: <ftp://", addr, ">")
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Fatal(err)

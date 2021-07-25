@@ -1,35 +1,49 @@
 package router
 
 import (
-	"github.com/whoisnian/share-Go/internal/handler"
-	"github.com/whoisnian/share-Go/pkg/httpd"
+	"github.com/whoisnian/glb/httpd"
+	"github.com/whoisnian/glb/logger"
+	"github.com/whoisnian/share-Go/internal/config"
+	"github.com/whoisnian/share-Go/pkg/storage"
+	"github.com/whoisnian/share-Go/pkg/tasklane"
+	"golang.org/x/net/webdav"
 )
 
-func Init() {
-	handler.Init()
+type jsonMap map[string]interface{}
 
-	routes := []struct {
-		pattern string
-		method  string
-		handler func(httpd.Store)
-	}{
-		{"/api/file/*", "GET", handler.FileInfoHandler},
-		{"/api/file/*", "POST", handler.CreateFileHandler},
-		{"/api/file/*", "DELETE", handler.DeleteFileHandler},
-		{"/api/dir/*", "GET", handler.ListDirHandler},
-		{"/api/dir/*", "POST", handler.CreateDirHandler},
-		{"/api/dir/*", "DELETE", handler.DeleteDirHandler},
+var fsStore *storage.Store
+var downloadTaskLane *tasklane.TaskLane
+var webdavHander *webdav.Handler
 
-		{"/api/raw/*", "GET", handler.RawHandler},
-		{"/api/download/*", "GET", handler.DownloadHandler},
-		{"/api/upload/*", "POST", handler.UploadHandler},
-
-		{"/webdav/*", "*", handler.WebDAVHander},
-		{"/view/*", "GET", handler.ViewHandler},
-		{"/*", "GET", handler.IndexHandler},
+func Init() *httpd.Mux {
+	var err error
+	if fsStore, err = storage.New(config.RootPath); err != nil {
+		logger.Fatal(err)
 	}
 
-	for _, route := range routes {
-		httpd.Handle(route.pattern, route.method, route.handler)
+	// runtime.GOMAXPROCS(0)
+	downloadTaskLane = tasklane.New(2, 16)
+
+	webdavHander = &webdav.Handler{
+		Prefix:     "/webdav",
+		FileSystem: webdav.Dir(config.RootPath),
+		LockSystem: webdav.NewMemLS(),
 	}
+
+	mux := httpd.NewMux()
+	mux.Handle("/api/file/*", "GET", FileInfoHandler)
+	mux.Handle("/api/file/*", "POST", CreateFileHandler)
+	mux.Handle("/api/file/*", "DELETE", DeleteFileHandler)
+	mux.Handle("/api/dir/*", "GET", ListDirHandler)
+	mux.Handle("/api/dir/*", "POST", CreateDirHandler)
+	mux.Handle("/api/dir/*", "DELETE", DeleteDirHandler)
+
+	mux.Handle("/api/raw/*", "GET", RawHandler)
+	mux.Handle("/api/download/*", "GET", DownloadHandler)
+	mux.Handle("/api/upload/*", "POST", UploadHandler)
+
+	mux.Handle("/webdav/*", "*", httpd.CreateHandler(webdavHander.ServeHTTP))
+	mux.Handle("/view/*", "GET", ViewHandler)
+	mux.Handle("/*", "GET", IndexHandler)
+	return mux
 }

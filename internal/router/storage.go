@@ -1,4 +1,4 @@
-package handler
+package router
 
 import (
 	"errors"
@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/whoisnian/share-Go/pkg/httpd"
-	"github.com/whoisnian/share-Go/pkg/logger"
+	"github.com/whoisnian/glb/httpd"
+	"github.com/whoisnian/glb/logger"
 )
 
 type fileType int
@@ -41,12 +41,12 @@ func parseFileInfo(info os.FileInfo) fileInfo {
 	}
 }
 
-func FileInfoHandler(store httpd.Store) {
-	path := filepath.Join("/", store.RouteAny())
+func FileInfoHandler(store *httpd.Store) {
+	path := filepath.Join("/", store.RouteParamAny())
 	info, err := fsStore.FileInfo(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			store.WriteHeader(http.StatusNotFound)
+			store.W.WriteHeader(http.StatusNotFound)
 			store.RespondJson(nil)
 			return
 		}
@@ -56,15 +56,15 @@ func FileInfoHandler(store httpd.Store) {
 	store.RespondJson(parseFileInfo(info))
 }
 
-func CreateFileHandler(store httpd.Store) {
-	path := filepath.Join("/", store.RouteAny())
+func CreateFileHandler(store *httpd.Store) {
+	path := filepath.Join("/", store.RouteParamAny())
 	file, err := fsStore.CreateFile(path)
 	if err != nil {
 		logger.Panic(err)
 	}
 	defer file.Close()
 
-	bodyReader := store.Body()
+	bodyReader := store.R.Body
 	defer bodyReader.Close()
 
 	io.Copy(file, bodyReader)
@@ -72,11 +72,11 @@ func CreateFileHandler(store httpd.Store) {
 	store.Respond200(nil)
 }
 
-func DeleteFileHandler(store httpd.Store) {
-	path := filepath.Join("/", store.RouteAny())
+func DeleteFileHandler(store *httpd.Store) {
+	path := filepath.Join("/", store.RouteParamAny())
 	if err := fsStore.Delete(path); err != nil {
 		if errors.Is(err, syscall.ENOTEMPTY) {
-			store.WriteHeader(http.StatusBadRequest)
+			store.W.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		logger.Panic(err)
@@ -84,16 +84,16 @@ func DeleteFileHandler(store httpd.Store) {
 	store.Respond200(nil)
 }
 
-func ListDirHandler(store httpd.Store) {
-	path := filepath.Join("/", store.RouteAny())
+func ListDirHandler(store *httpd.Store) {
+	path := filepath.Join("/", store.RouteParamAny())
 	infos, err := fsStore.ListDir(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			store.WriteHeader(http.StatusNotFound)
+			store.W.WriteHeader(http.StatusNotFound)
 			store.RespondJson(nil)
 			return
 		} else if errors.Is(err, syscall.ENOTDIR) {
-			store.WriteHeader(http.StatusBadRequest)
+			store.W.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		logger.Panic(err)
@@ -109,28 +109,28 @@ func ListDirHandler(store httpd.Store) {
 	})
 }
 
-func CreateDirHandler(store httpd.Store) {
-	path := filepath.Join("/", store.RouteAny())
+func CreateDirHandler(store *httpd.Store) {
+	path := filepath.Join("/", store.RouteParamAny())
 	if err := fsStore.CreateDir(path); err != nil {
 		logger.Panic(err)
 	}
 	store.Respond200(nil)
 }
 
-func DeleteDirHandler(store httpd.Store) {
-	path := filepath.Join("/", store.RouteAny())
+func DeleteDirHandler(store *httpd.Store) {
+	path := filepath.Join("/", store.RouteParamAny())
 	if err := fsStore.DeleteAll(path); err != nil {
 		logger.Panic(err)
 	}
 	store.Respond200(nil)
 }
 
-func RawHandler(store httpd.Store) {
-	path := filepath.Join("/", store.RouteAny())
+func RawHandler(store *httpd.Store) {
+	path := filepath.Join("/", store.RouteParamAny())
 	info, err := fsStore.FileInfo(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			store.WriteHeader(http.StatusNotFound)
+			store.W.WriteHeader(http.StatusNotFound)
 			store.RespondJson(nil)
 			return
 		}
@@ -144,24 +144,23 @@ func RawHandler(store httpd.Store) {
 		}
 		defer file.Close()
 
-		writer := store.Writer()
-		if _, err := io.Copy(writer, file); err != nil {
+		if _, err := io.Copy(store.W, file); err != nil {
 			logger.Panic(err)
 		}
 		return
 	} else {
-		store.WriteHeader(http.StatusUnprocessableEntity)
+		store.W.WriteHeader(http.StatusUnprocessableEntity)
 		store.RespondJson(nil)
 		return
 	}
 }
 
-func DownloadHandler(store httpd.Store) {
-	path := filepath.Join("/", store.RouteAny())
+func DownloadHandler(store *httpd.Store) {
+	path := filepath.Join("/", store.RouteParamAny())
 	info, err := fsStore.FileInfo(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			store.WriteHeader(http.StatusNotFound)
+			store.W.WriteHeader(http.StatusNotFound)
 			store.RespondJson(nil)
 			return
 		}
@@ -176,11 +175,10 @@ func DownloadHandler(store httpd.Store) {
 		defer file.Close()
 
 		filename := url.PathEscape(filepath.Base(path))
-		store.ResponseHeader().Add("content-disposition", "attachment; filename*=UTF-8''"+filename+"; filename=\""+filename+"\"")
+		store.W.Header().Add("content-disposition", "attachment; filename*=UTF-8''"+filename+"; filename=\""+filename+"\"")
 
-		writer := store.Writer()
-		if _, err := io.Copy(writer, file); err != nil {
-			store.ResponseHeader().Del("content-disposition")
+		if _, err := io.Copy(store.W, file); err != nil {
+			store.W.Header().Del("content-disposition")
 			logger.Panic(err)
 		}
 		return
@@ -190,14 +188,14 @@ func DownloadHandler(store httpd.Store) {
 			filename = "root"
 		}
 		filename = url.PathEscape(filename)
-		store.ResponseHeader().Add("content-disposition", "attachment; filename*=UTF-8''"+filename+".zip; filename=\""+filename+".zip\"")
-		if err := fsStore.GetDirAsZip(path, store.Writer()); err != nil {
-			store.ResponseHeader().Del("content-disposition")
+		store.W.Header().Add("content-disposition", "attachment; filename*=UTF-8''"+filename+".zip; filename=\""+filename+".zip\"")
+		if err := fsStore.GetDirAsZip(path, store.W); err != nil {
+			store.W.Header().Del("content-disposition")
 			logger.Panic(err)
 		}
 		return
 	} else {
-		store.WriteHeader(http.StatusUnprocessableEntity)
+		store.W.WriteHeader(http.StatusUnprocessableEntity)
 		store.RespondJson(nil)
 		return
 	}
@@ -218,9 +216,9 @@ func createDownloadTask(url string, dir string) func() {
 	}
 }
 
-func UploadHandler(store httpd.Store) {
-	path := filepath.Join("/", store.RouteAny())
-	reader, err := store.MultipartReader()
+func UploadHandler(store *httpd.Store) {
+	path := filepath.Join("/", store.RouteParamAny())
+	reader, err := store.R.MultipartReader()
 	if err != nil {
 		logger.Panic(err)
 	}
@@ -249,8 +247,4 @@ func UploadHandler(store httpd.Store) {
 		}
 	}
 	store.Respond200(nil)
-}
-
-func WebDAVHander(store httpd.Store) {
-	httpd.CreateHandler(webdavHander.ServeHTTP)(store)
 }
