@@ -11,7 +11,6 @@ import (
 	"github.com/whoisnian/glb/util/netutil"
 	"github.com/whoisnian/share-Go/internal/config"
 	"github.com/whoisnian/share-Go/internal/router"
-	"github.com/whoisnian/share-Go/pkg/ftpd"
 )
 
 func main() {
@@ -30,11 +29,6 @@ func main() {
 		if err := http.ListenAndServe(config.HTTPListenAddr, logger.Req(mux)); err != nil {
 			logger.Fatal(err)
 		}
-	}()
-
-	go func() {
-		logger.Info("Service ftpd started: <ftp://", config.FTPListenAddr, ">")
-		ftpd.Start(config.FTPListenAddr, config.RootPath)
 	}()
 
 	interrupt := make(chan os.Signal, 1)
