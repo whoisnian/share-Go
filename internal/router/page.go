@@ -24,7 +24,7 @@ func serveFileFromFE(store *httpd.Store, path string) {
 	}
 	defer file.Close()
 
-	if fileInfo, _ := file.Stat(); fileInfo.IsDir() {
+	if info, err := file.Stat(); err != nil || info.IsDir() {
 		store.W.WriteHeader(http.StatusForbidden)
 		return
 	}
