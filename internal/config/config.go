@@ -11,6 +11,9 @@ import (
 // Debug example: `true`.
 var Debug bool
 
+// ReadOnly example: `false`.
+var ReadOnly bool
+
 // HTTPListenAddr example: `127.0.0.1:9000`.
 var HTTPListenAddr string
 
@@ -22,11 +25,13 @@ var RootPath string
 
 var configInstance = &struct {
 	Debug          *bool
+	ReadOnly       *bool
 	HTTPListenAddr *string
 	FTPListenAddr  *string
 	RootPath       *string
 }{
 	&Debug,
+	&ReadOnly,
 	&HTTPListenAddr,
 	&FTPListenAddr,
 	&RootPath,

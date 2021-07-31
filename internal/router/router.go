@@ -1,10 +1,12 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/whoisnian/glb/httpd"
+	"github.com/whoisnian/glb/tasklane"
 	"github.com/whoisnian/glb/util/fsutil"
 	"github.com/whoisnian/share-Go/internal/config"
-	"github.com/whoisnian/share-Go/pkg/tasklane"
 	"golang.org/x/net/webdav"
 )
 
@@ -13,29 +15,47 @@ type jsonMap map[string]interface{}
 var lockedFS *fsutil.LockedFS
 var downloadTaskLane *tasklane.TaskLane
 
+func checkReadOnly(handler httpd.HandlerFunc) httpd.HandlerFunc {
+	if config.ReadOnly {
+		return func(store *httpd.Store) { store.W.WriteHeader(http.StatusForbidden) }
+	} else {
+		return handler
+	}
+}
+
 func Init() *httpd.Mux {
 	lockedFS = fsutil.NewLockedFS()
 
-	webdavHander := httpd.CreateHandler((&webdav.Handler{
-		Prefix:     "/webdav",
-		FileSystem: webdav.Dir(config.RootPath),
-		LockSystem: webdav.NewMemLS(),
-	}).ServeHTTP)
+	webdavHander := func(store *httpd.Store) {
+		if !config.ReadOnly ||
+			store.R.Method == "PROPFIND" ||
+			store.R.Method == "GET" ||
+			store.R.Method == "HEAD" ||
+			store.R.Method == "OPTIONS" {
+			(&webdav.Handler{
+				Prefix:     "/webdav",
+				FileSystem: webdav.Dir(config.RootPath),
+				LockSystem: webdav.NewMemLS(),
+			}).ServeHTTP(store.W, store.R)
+		} else {
+			store.W.WriteHeader(http.StatusForbidden)
+		}
+	}
 
 	mux := httpd.NewMux()
-	mux.Handle("/api/file/*", "GET", FileInfoHandler)
-	mux.Handle("/api/file/*", "POST", NewFileHandler)
-	mux.Handle("/api/file/*", "DELETE", DeleteFileHandler)
-	mux.Handle("/api/dir/*", "GET", ListDirHandler)
-	mux.Handle("/api/dir/*", "POST", NewDirHandler)
-	mux.Handle("/api/dir/*", "DELETE", DeleteDirHandler)
+	mux.Handle("/api/file/*", "GET", fileInfoHandler)
+	mux.Handle("/api/file/*", "POST", checkReadOnly(newFileHandler))
+	mux.Handle("/api/file/*", "DELETE", checkReadOnly(deleteFileHandler))
+	mux.Handle("/api/dir/*", "GET", listDirHandler)
+	mux.Handle("/api/dir/*", "POST", checkReadOnly(newDirHandler))
+	mux.Handle("/api/dir/*", "DELETE", checkReadOnly(deleteDirHandler))
 
-	mux.Handle("/api/raw/*", "GET", RawHandler)
-	mux.Handle("/api/download/*", "GET", DownloadHandler)
-	mux.Handle("/api/upload/*", "POST", UploadHandler)
+	mux.Handle("/api/raw/*", "GET", rawHandler)
+	mux.Handle("/api/download/*", "GET", downloadHandler)
+	mux.Handle("/api/upload/*", "POST", checkReadOnly(uploadHandler))
 
 	mux.Handle("/webdav/*", "*", webdavHander)
-	mux.Handle("/view/*", "GET", ViewHandler)
-	mux.Handle("/*", "GET", IndexHandler)
+	mux.Handle("/view/*", "GET", viewHandler)
+	mux.Handle("/*", "GET", indexHandler)
 	return mux
 }

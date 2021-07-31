@@ -45,11 +45,11 @@ func serveFileFromFE(store *httpd.Store, path string) {
 	}
 }
 
-func ViewHandler(store *httpd.Store) {
+func viewHandler(store *httpd.Store) {
 	serveFileFromFE(store, "static/index.html")
 }
 
-func IndexHandler(store *httpd.Store) {
+func indexHandler(store *httpd.Store) {
 	path := store.RouteParamAny()
 	if path == "" {
 		store.Redirect("/view/", http.StatusFound)
