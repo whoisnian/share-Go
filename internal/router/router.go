@@ -10,10 +10,10 @@ import (
 	"golang.org/x/net/webdav"
 )
 
-type jsonMap map[string]interface{}
-
 var lockedFS *fsutil.LockedFS
 var downloadTaskLane *tasklane.TaskLane
+
+type jsonMap map[string]interface{}
 
 func checkReadOnly(handler httpd.HandlerFunc) httpd.HandlerFunc {
 	if config.ReadOnly {
@@ -25,6 +25,8 @@ func checkReadOnly(handler httpd.HandlerFunc) httpd.HandlerFunc {
 
 func Init() *httpd.Mux {
 	lockedFS = fsutil.NewLockedFS()
+
+	downloadTaskLane = tasklane.New(2, 16)
 
 	webdavHander := func(store *httpd.Store) {
 		if !config.ReadOnly ||

@@ -231,21 +231,6 @@ func downloadHandler(store *httpd.Store) {
 	}
 }
 
-func createDownloadTask(url string, dir string) func() {
-	return func() {
-		file, err := lockedFS.Create(filepath.Join(dir, path.Base(url)))
-		if err != nil {
-			return
-		}
-		defer file.Close()
-
-		if resp, err := http.Get(url); err == nil {
-			defer resp.Body.Close()
-			io.Copy(file, resp.Body)
-		}
-	}
-}
-
 func uploadHandler(store *httpd.Store) {
 	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
 	reader, err := store.R.MultipartReader()
@@ -266,7 +251,7 @@ func uploadHandler(store *httpd.Store) {
 			if err != nil {
 				logger.Panic(err)
 			}
-			downloadTaskLane.PushTask(createDownloadTask(string(url), path), shortestQueue)
+			downloadTaskLane.PushTask(newDownloadTask(string(url), path), shortestQueue)
 		} else if part.FormName() == "fileList" {
 			file, err := lockedFS.Create(filepath.Join(path, part.FileName()))
 			if err != nil {
@@ -275,5 +260,39 @@ func uploadHandler(store *httpd.Store) {
 			defer file.Close()
 			io.Copy(file, part)
 		}
+	}
+}
+
+type downloadTask struct {
+	url string
+	dir string
+	err error
+}
+
+func newDownloadTask(url string, dir string) *downloadTask {
+	return &downloadTask{url, dir, nil}
+}
+
+func (t *downloadTask) Start() {
+	file, err := lockedFS.Create(filepath.Join(t.dir, path.Base(t.url)))
+	if err != nil {
+		t.Done(err)
+		return
+	}
+	defer file.Close()
+
+	resp, err := http.Get(t.url)
+	if err != nil {
+		t.Done(err)
+		return
+	}
+	defer resp.Body.Close()
+	io.Copy(file, resp.Body)
+	t.Done(nil)
+}
+
+func (t *downloadTask) Done(err error) {
+	if err != nil {
+		logger.Error(err)
 	}
 }
