@@ -39,7 +39,7 @@ const createHeader = (oriPath) => {
   }
   const fileNewIcon = createIcon('file-new', { class: 'DirView-iconButton', title: 'Create new file' })
   fileNewIcon.onclick = () => {
-    const uploadDialog = createUploadDialog(joinPath('/', oriPath))
+    const { uploadDialog } = createUploadDialog(joinPath('/', oriPath))
     const removeSelf = (event) => {
       if (event.target === uploadDialog) {
         uploadDialog.remove()
@@ -123,7 +123,7 @@ const createDirView = async (oriPath) => {
   // Drag-and-Drop File Uploader
   main.ondragenter = main.ondragover = (e) => e.preventDefault()
   main.ondrop = (e) => {
-    const uploadDialog = createUploadDialog(joinPath('/', oriPath))
+    const { uploadDialog, uploadFiles } = createUploadDialog(joinPath('/', oriPath))
     const removeSelf = (event) => {
       if (event.target === uploadDialog) {
         uploadDialog.remove()
@@ -132,7 +132,7 @@ const createDirView = async (oriPath) => {
     }
     document.addEventListener('click', removeSelf)
     main.appendChild(uploadDialog)
-    uploadDialog.uploadFiles(e.dataTransfer.files)
+    uploadFiles(e.dataTransfer.files)
     e.preventDefault()
   }
 

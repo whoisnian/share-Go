@@ -44,8 +44,7 @@ const createUploadDialog = (base) => {
     uploadButton.textContent = dataTotal ? `${Math.round(100 * dataLoaded / dataTotal)} %` : `Uploading`
     uploadContent.value = `Uploading ${fileIndex + 1} of ${fileTotal} files.`
   }
-  // TODO: 修改 export 该方法的实现方式
-  uploadDialog.uploadFiles = (fileList) => {
+  const uploadFiles = (fileList) => {
     uploadButton.textContent = 'Ready'
     if (fileList && fileList.length === 1) {
       uploadContent.value = fileList[0].name
@@ -61,7 +60,7 @@ const createUploadDialog = (base) => {
     })
   }
   uploadButton.onclick = () => {
-    chooseFile(uploadDialog.uploadFiles, true)
+    chooseFile(uploadFiles, true)
   }
   fromLocal.tabContent.appendChild(uploadButton)
   fromLocal.tabContent.appendChild(uploadContent)
@@ -96,7 +95,10 @@ const createUploadDialog = (base) => {
   popup.appendChild(tab)
   tabList.forEach(t => popup.appendChild(t.tabContent))
   uploadDialog.appendChild(popup)
-  return uploadDialog
+  return {
+    uploadDialog,
+    uploadFiles
+  }
 }
 
 export { createUploadDialog }
