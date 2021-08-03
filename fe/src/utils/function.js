@@ -81,18 +81,19 @@ const joinPath = (...path) => {
   return cleanPath(path.join('/'))
 }
 
-function reloadPage() {
-  window.location.reload()
-}
+const reloadPage = () => window.location.reload()
 
 /** @param { string } url */
-function openUrl(url) {
-  window.location.href = url
-}
+const openUrl = (url) => { window.location.href = url }
 
 /** @param { string } url */
-function openUrlInNewTab(url) {
-  window.open(url, '_blank')
+const openUrlInNewTab = (url) => window.open(url, '_blank')
+
+/** @param { string } path */
+const pathExt = (path) => {
+  const res = path.match(/\.(\w+)$/i)
+  if (!res) return ''
+  return res[1].toLowerCase()
 }
 
 export {
@@ -102,5 +103,6 @@ export {
   joinPath,
   reloadPage,
   openUrl,
-  openUrlInNewTab
+  openUrlInNewTab,
+  pathExt
 }

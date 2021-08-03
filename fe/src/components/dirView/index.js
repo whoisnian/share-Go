@@ -1,10 +1,10 @@
 import { FileType, requestListDir, requestDeleteRecursively, requestCreateDir } from 'api/storage'
-import { createIcon } from 'components/icon'
+import { createIcon, createMimeIcon } from 'components/icon'
 import { createContextMenu } from 'components/contextMenu'
 import { createInputDialog } from 'components/inputDialog'
 import { createUploadDialog } from 'components/uploadDialog'
 import { createElement, downloadFile, copyText } from 'utils/element'
-import { calcFromBytes, calcRelativeTime, joinPath, openUrl, openUrlInNewTab, reloadPage } from 'utils/function'
+import { calcFromBytes, calcRelativeTime, joinPath, openUrl, openUrlInNewTab, reloadPage, pathExt } from 'utils/function'
 import './style.css'
 
 /** @param { string } oriPath */
@@ -24,7 +24,7 @@ const createHeader = (oriPath) => {
   pasteIcon.onclick = () => copyText(window.location.href)
   const folderNewIcon = createIcon('folder-new', { class: 'DirView-iconButton', title: 'Create new folder' })
   folderNewIcon.onclick = () => {
-    const inputDialog = createInputDialog("Folder Name:", "new folder", (dirName) => {
+    const inputDialog = createInputDialog('Folder Name:', 'new folder', (dirName) => {
       requestCreateDir(joinPath('/', oriPath, encodeURIComponent(dirName))).then(() => reloadPage())
     })
     const removeSelf = (event) => {
@@ -69,7 +69,7 @@ const createFileItem = (oriPath, fileInfo) => {
 
   // 文件详情（图标，名称，菜单）
   const detailsItem = createElement('div', { class: 'DirView-fileDetails' })
-  const iconItem = createIcon(fileInfo.Type === 1 ? 'folder' : 'file', { class: 'DirView-fileIcon' })
+  const iconItem = fileInfo.Type === 1 ? createIcon('folder', { class: 'DirView-fileIcon' }) : createMimeIcon(pathExt(fileInfo.Name), { class: 'DirView-fileIcon' })
   const nameItem = createElement('span', { class: 'DirView-fileName' })
   const nameLink = createElement('a', {
     class: 'DirView-nameLink',
@@ -153,7 +153,7 @@ const createDirView = async (oriPath) => {
   }, {
     icon: 'edit',
     name: '重命名',
-    listener: () => alert('todo')
+    listener: () => window.alert('todo')
   }, {
     icon: 'download',
     name: '下载',

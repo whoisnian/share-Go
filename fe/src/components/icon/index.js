@@ -1,4 +1,5 @@
 import { createElement, createElementNS } from 'utils/element'
+import { createMimeIcon } from './mime'
 
 /**
  * @typedef {(
@@ -48,4 +49,4 @@ const createIcon = (name, options = {}) => {
   return iconElement
 }
 
-export { createIcon }
+export { createIcon, createMimeIcon }
