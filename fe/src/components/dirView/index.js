@@ -121,8 +121,8 @@ const createDirView = async (oriPath) => {
   const main = createElement('div', { class: 'DirView-main' })
 
   // Drag-and-Drop File Uploader
-  main.ondragenter = main.ondragover = (e) => e.preventDefault()
-  main.ondrop = (e) => {
+  window.ondragenter = window.ondragover = (e) => e.preventDefault()
+  window.ondrop = (e) => {
     const { uploadDialog, uploadFiles } = createUploadDialog(joinPath('/', oriPath))
     const removeSelf = (event) => {
       if (event.target === uploadDialog) {
