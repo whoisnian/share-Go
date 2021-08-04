@@ -17,9 +17,6 @@ var ReadOnly bool
 // HTTPListenAddr example: `127.0.0.1:9000`.
 var HTTPListenAddr string
 
-// FTPListenAddr example: `127.0.0.1:2121`.
-var FTPListenAddr string
-
 // RootPath example: `/srv/share`.
 var RootPath string
 
@@ -27,13 +24,11 @@ var configInstance = &struct {
 	Debug          *bool
 	ReadOnly       *bool
 	HTTPListenAddr *string
-	FTPListenAddr  *string
 	RootPath       *string
 }{
 	&Debug,
 	&ReadOnly,
 	&HTTPListenAddr,
-	&FTPListenAddr,
 	&RootPath,
 }
 
