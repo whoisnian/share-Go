@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"syscall"
 
 	"github.com/whoisnian/glb/httpd"
@@ -142,7 +143,10 @@ func rawHandler(store *httpd.Store) {
 		}
 		defer file.Close()
 
-		if _, err := io.Copy(store.W, file); err != nil {
+		if store.W.Header().Get("content-encoding") == "" {
+			store.W.Header().Set("content-length", strconv.FormatInt(info.Size(), 10))
+		}
+		if _, err := io.CopyN(store.W, file, info.Size()); err != nil {
 			logger.Panic(err)
 		}
 	} else {
@@ -208,9 +212,12 @@ func downloadHandler(store *httpd.Store) {
 		defer file.Close()
 
 		filename := url.PathEscape(filepath.Base(path))
-		store.W.Header().Add("content-disposition", "attachment; filename*=UTF-8''"+filename+"; filename=\""+filename+"\"")
+		store.W.Header().Set("content-disposition", "attachment; filename*=UTF-8''"+filename+"; filename=\""+filename+"\"")
 
-		if _, err := io.Copy(store.W, file); err != nil {
+		if store.W.Header().Get("content-encoding") == "" {
+			store.W.Header().Set("content-length", strconv.FormatInt(info.Size(), 10))
+		}
+		if _, err := io.CopyN(store.W, file, info.Size()); err != nil {
 			store.W.Header().Del("content-disposition")
 			logger.Panic(err)
 		}
@@ -220,7 +227,7 @@ func downloadHandler(store *httpd.Store) {
 			filename = "root"
 		}
 		filename = url.PathEscape(filename)
-		store.W.Header().Add("content-disposition", "attachment; filename*=UTF-8''"+filename+".zip; filename=\""+filename+".zip\"")
+		store.W.Header().Set("content-disposition", "attachment; filename*=UTF-8''"+filename+".zip; filename=\""+filename+".zip\"")
 		zipWriter := zip.NewWriter(store.W)
 		if err := archiveDirAsZip(path, zipWriter); err != nil {
 			store.W.Header().Del("content-disposition")

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/whoisnian/glb/httpd"
@@ -24,7 +25,8 @@ func serveFileFromFE(store *httpd.Store, path string) {
 	}
 	defer file.Close()
 
-	if info, err := file.Stat(); err != nil || info.IsDir() {
+	info, err := file.Stat()
+	if err != nil || info.IsDir() {
 		store.W.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -35,12 +37,15 @@ func serveFileFromFE(store *httpd.Store, path string) {
 	} else if strings.Contains(ctype, "text/css") || strings.Contains(ctype, "application/javascript") {
 		// nginx expires max
 		// https://nginx.org/en/docs/http/ngx_http_headers_module.html#expires
-		store.W.Header().Add("cache-control", "max-age:315360000, public")
-		store.W.Header().Add("expires", "Thu, 31 Dec 2037 23:55:55 GMT")
+		store.W.Header().Set("cache-control", "max-age:315360000, public")
+		store.W.Header().Set("expires", "Thu, 31 Dec 2037 23:55:55 GMT")
 	}
-	store.W.Header().Add("content-type", ctype)
+	store.W.Header().Set("content-type", ctype)
 
-	if _, err := io.Copy(store.W, file); err != nil {
+	if store.W.Header().Get("content-encoding") == "" {
+		store.W.Header().Set("content-length", strconv.FormatInt(info.Size(), 10))
+	}
+	if _, err := io.CopyN(store.W, file, info.Size()); err != nil {
 		logger.Panic(err)
 	}
 }
