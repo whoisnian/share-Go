@@ -17,11 +17,13 @@ func main() {
 	config.Init()
 	logger.SetDebug(config.Debug)
 
-	if _, port, err := net.SplitHostPort(config.HTTPListenAddr); err == nil {
+	predictAddr := config.HTTPListenAddr
+	if host, port, err := net.SplitHostPort(config.HTTPListenAddr); err == nil && host == "0.0.0.0" {
 		if ip, err := netutil.GetOutBoundIP(); err == nil {
-			logger.Info("Try visiting ", ansi.Green, "http://", net.JoinHostPort(ip.String(), port), ansi.Reset, " in your browser.")
+			predictAddr = net.JoinHostPort(ip.String(), port)
 		}
 	}
+	logger.Info("Try visiting ", ansi.Green, "http://", predictAddr, ansi.Reset, " in your browser.")
 
 	go func() {
 		mux := router.Init()

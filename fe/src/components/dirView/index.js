@@ -50,6 +50,35 @@ const createHeader = (oriPath) => {
     header.appendChild(uploadDialog)
   }
   const sortIcon = createIcon('sort', { class: 'DirView-iconButton', title: 'Sort by' })
+  const {
+    contextMenu: sortMenu,
+    show: showSortMenu
+  } = createContextMenu([{
+    icon: 'sort-name-asc',
+    name: '按名称升序',
+    listener: () => header.dispatchEvent(new window.CustomEvent('sort', { detail: { method: 'name asc' } }))
+  }, {
+    icon: 'sort-name-dsc',
+    name: '按名称降序',
+    listener: () => header.dispatchEvent(new window.CustomEvent('sort', { detail: { method: 'name dsc' } }))
+  }, {
+    icon: 'sort-time-asc',
+    name: '按时间升序',
+    listener: () => header.dispatchEvent(new window.CustomEvent('sort', { detail: { method: 'mtime asc' } }))
+  }, {
+    icon: 'sort-time-dsc',
+    name: '按时间降序',
+    listener: () => header.dispatchEvent(new window.CustomEvent('sort', { detail: { method: 'mtime dsc' } }))
+  }, {
+    icon: 'sort-amount-asc',
+    name: '按大小升序',
+    listener: () => header.dispatchEvent(new window.CustomEvent('sort', { detail: { method: 'size asc' } }))
+  }, {
+    icon: 'sort-amount-dsc',
+    name: '按大小降序',
+    listener: () => header.dispatchEvent(new window.CustomEvent('sort', { detail: { method: 'size dsc' } }))
+  }])
+  sortIcon.onclick = showSortMenu
 
   header.appendChild(parentIcon)
   header.appendChild(refreshIcon)
@@ -59,6 +88,7 @@ const createHeader = (oriPath) => {
   header.appendChild(folderNewIcon)
   header.appendChild(fileNewIcon)
   header.appendChild(sortIcon)
+  header.appendChild(sortMenu)
   return header
 }
 
@@ -113,10 +143,24 @@ const createDirView = async (oriPath) => {
   }
 
   const fileInfos = content.FileInfos
-  fileInfos.sort((a, b) => {
-    if (a.Type === b.Type) return a.Name.localeCompare(b.Name, 'zh-CN')
-    return b.Type - a.Type
-  })
+  fileInfos.sortBy = (method) => {
+    switch (method) {
+      case 'name asc':
+        return fileInfos.sort((a, b) => a.Type === b.Type ? a.Name.localeCompare(b.Name, 'zh-CN') : b.Type - a.Type)
+      case 'name dsc':
+        return fileInfos.sort((a, b) => a.Type === b.Type ? b.Name.localeCompare(a.Name, 'zh-CN') : b.Type - a.Type)
+      case 'mtime asc':
+        return fileInfos.sort((a, b) => a.Type === b.Type ? a.MTime - b.MTime : b.Type - a.Type)
+      case 'mtime dsc':
+        return fileInfos.sort((a, b) => a.Type === b.Type ? b.MTime - a.MTime : b.Type - a.Type)
+      case 'size asc':
+        return fileInfos.sort((a, b) => a.Type === b.Type ? a.Size - b.Size : b.Type - a.Type)
+      case 'size dsc':
+        return fileInfos.sort((a, b) => a.Type === b.Type ? b.Size - a.Size : b.Type - a.Type)
+    }
+  }
+  const method = window.localStorage.getItem('sort_by') || 'name asc'
+  fileInfos.sortBy(method)
 
   const main = createElement('div', { class: 'DirView-main' })
 
@@ -177,7 +221,16 @@ const createDirView = async (oriPath) => {
       event.preventDefault()
       fileItem.showFileMenu(event)
     }
+    info.item = fileItem // link fileInfos to HTMLElement for re-sort
     main.appendChild(fileItem)
+  })
+
+  // listen for sort event
+  header.addEventListener('sort', (event) => {
+    window.localStorage.setItem('sort_by', event.detail.method)
+    fileInfos.sortBy(event.detail.method)
+    fileInfos.forEach(info => main.removeChild(info.item))
+    fileInfos.forEach(info => main.appendChild(info.item))
   })
 
   if (fileInfos.length === 0) {
