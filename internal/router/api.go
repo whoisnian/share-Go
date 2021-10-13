@@ -10,7 +10,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
 	"syscall"
 
 	"github.com/whoisnian/glb/httpd"
@@ -143,12 +142,7 @@ func rawHandler(store *httpd.Store) {
 		}
 		defer file.Close()
 
-		if store.W.Header().Get("content-encoding") == "" {
-			store.W.Header().Set("content-length", strconv.FormatInt(info.Size(), 10))
-		}
-		if _, err := io.CopyN(store.W, file, info.Size()); err != nil {
-			logger.Panic(err)
-		}
+		http.ServeFile(store.W, store.R, path)
 	} else {
 		store.W.WriteHeader(http.StatusUnprocessableEntity)
 	}
@@ -214,13 +208,7 @@ func downloadHandler(store *httpd.Store) {
 		filename := url.PathEscape(filepath.Base(path))
 		store.W.Header().Set("content-disposition", "attachment; filename*=UTF-8''"+filename+"; filename=\""+filename+"\"")
 
-		if store.W.Header().Get("content-encoding") == "" {
-			store.W.Header().Set("content-length", strconv.FormatInt(info.Size(), 10))
-		}
-		if _, err := io.CopyN(store.W, file, info.Size()); err != nil {
-			store.W.Header().Del("content-disposition")
-			logger.Panic(err)
-		}
+		http.ServeFile(store.W, store.R, path)
 	} else if info.Mode().IsDir() {
 		filename := filepath.Base(path)
 		if filename == "/" {
