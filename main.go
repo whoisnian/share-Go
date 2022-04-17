@@ -3,12 +3,11 @@ package main
 import (
 	"net"
 	"net/http"
-	"os"
-	"os/signal"
 
 	"github.com/whoisnian/glb/ansi"
 	"github.com/whoisnian/glb/logger"
 	"github.com/whoisnian/glb/util/netutil"
+	"github.com/whoisnian/glb/util/osutil"
 	"github.com/whoisnian/share-Go/internal/config"
 	"github.com/whoisnian/share-Go/internal/router"
 )
@@ -33,7 +32,5 @@ func main() {
 		}
 	}()
 
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-	<-interrupt
+	osutil.WaitForInterrupt()
 }
