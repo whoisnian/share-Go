@@ -28,7 +28,7 @@ func main() {
 	go func() {
 		mux := router.Init()
 		logger.Info("Service httpd started: <http://", config.HTTPListenAddr, ">")
-		if err := http.ListenAndServe(config.HTTPListenAddr, logger.Req(mux)); err != nil {
+		if err := http.ListenAndServe(config.HTTPListenAddr, logger.Req(logger.Recovery(mux))); err != nil {
 			logger.Fatal(err)
 		}
 	}()
