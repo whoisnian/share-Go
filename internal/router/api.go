@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
 	"syscall"
 
 	"github.com/whoisnian/glb/httpd"
@@ -43,6 +44,42 @@ func parseFileInfo(info os.FileInfo) respFileInfo {
 	}
 }
 
+type lockedFile struct {
+	*os.File
+	locker sync.Locker
+}
+
+func (f *lockedFile) Close() error {
+	f.locker.Unlock()
+	return f.File.Close()
+}
+
+func createFile(name string) (*lockedFile, error) {
+	v, _ := lockerMap.LoadOrStore(name, new(sync.RWMutex))
+	locker := v.(*sync.RWMutex)
+	locker.Lock()
+
+	file, err := os.Create(name)
+	if err != nil {
+		locker.Unlock()
+		return nil, err
+	}
+	return &lockedFile{file, locker}, nil
+}
+
+func openFile(name string) (*lockedFile, error) {
+	v, _ := lockerMap.LoadOrStore(name, new(sync.RWMutex))
+	locker := v.(*sync.RWMutex)
+	locker.RLock()
+
+	file, err := os.Open(name)
+	if err != nil {
+		locker.RUnlock()
+		return nil, err
+	}
+	return &lockedFile{file, locker.RLocker()}, nil
+}
+
 func fileInfoHandler(store *httpd.Store) {
 	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
 	info, err := os.Stat(path)
@@ -58,7 +95,7 @@ func fileInfoHandler(store *httpd.Store) {
 
 func newFileHandler(store *httpd.Store) {
 	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
-	file, err := lockedFS.Create(path)
+	file, err := createFile(path)
 	if err != nil {
 		logger.Panic(err)
 	}
@@ -83,7 +120,7 @@ func deleteFileHandler(store *httpd.Store) {
 
 func listDirHandler(store *httpd.Store) {
 	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
-	dir, err := lockedFS.Open(path)
+	dir, err := openFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			store.W.WriteHeader(http.StatusNotFound)
@@ -136,7 +173,7 @@ func rawHandler(store *httpd.Store) {
 	}
 
 	if info.Mode().IsRegular() {
-		file, err := lockedFS.Open(path)
+		file, err := openFile(path)
 		if err != nil {
 			logger.Panic(err)
 		}
@@ -157,7 +194,7 @@ func archiveDirAsZip(dirPath string, zipWriter *zip.Writer) error {
 			return nil
 		}
 
-		file, err := lockedFS.Open(fullPath)
+		file, err := openFile(fullPath)
 		if err != nil {
 			return err
 		}
@@ -199,7 +236,7 @@ func downloadHandler(store *httpd.Store) {
 	}
 
 	if info.Mode().IsRegular() {
-		file, err := lockedFS.Open(path)
+		file, err := openFile(path)
 		if err != nil {
 			logger.Panic(err)
 		}
@@ -248,7 +285,7 @@ func uploadHandler(store *httpd.Store) {
 			}
 			downloadTaskLane.PushTask(newDownloadTask(string(url), path), shortestQueue)
 		} else if part.FormName() == "fileList" {
-			file, err := lockedFS.Create(filepath.Join(path, part.FileName()))
+			file, err := createFile(filepath.Join(path, part.FileName()))
 			if err != nil {
 				logger.Panic(err)
 			}
@@ -269,7 +306,7 @@ func newDownloadTask(url string, dir string) *downloadTask {
 }
 
 func (t *downloadTask) Start() {
-	file, err := lockedFS.Create(filepath.Join(t.dir, path.Base(t.url)))
+	file, err := createFile(filepath.Join(t.dir, path.Base(t.url)))
 	if err != nil {
 		t.Done(err)
 		return

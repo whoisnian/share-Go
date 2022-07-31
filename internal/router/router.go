@@ -1,16 +1,17 @@
 package router
 
 import (
+	"context"
 	"net/http"
+	"sync"
 
 	"github.com/whoisnian/glb/httpd"
 	"github.com/whoisnian/glb/tasklane"
-	"github.com/whoisnian/glb/util/fsutil"
 	"github.com/whoisnian/share-Go/internal/config"
 	"golang.org/x/net/webdav"
 )
 
-var lockedFS *fsutil.LockedFS
+var lockerMap *sync.Map
 var downloadTaskLane *tasklane.TaskLane
 
 type jsonMap map[string]interface{}
@@ -24,9 +25,9 @@ func checkReadOnly(handler httpd.HandlerFunc) httpd.HandlerFunc {
 }
 
 func Init() *httpd.Mux {
-	lockedFS = fsutil.NewLockedFS()
+	lockerMap = new(sync.Map)
 
-	downloadTaskLane = tasklane.New(2, 16)
+	downloadTaskLane = tasklane.New(context.Background(), 2, 16)
 
 	webdavHander := func(store *httpd.Store) {
 		if !config.ReadOnly ||
