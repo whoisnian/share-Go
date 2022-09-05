@@ -1,6 +1,6 @@
-github.com/whoisnian/glb v1.0.0 h1:Nrpgpn45XPrgOJVysyOTB08HpX75uO3gKzrew9QG2iA=
-github.com/whoisnian/glb v1.0.0/go.mod h1:43Ef4TqfYu7a2oKW6JZKsS2WVTCLpechqeGo+1xvu9Y=
+github.com/whoisnian/glb v1.0.1 h1:9CRF5p5ZSmbg7yc5ZwIjYxbNZI7VEWp9Q5NXiM4rusM=
+github.com/whoisnian/glb v1.0.1/go.mod h1:dw50N/+UXKEOzmbAsL1iCsKf2Q7xIQqish0jWW5uRDE=
 golang.org/x/net v0.0.0-20220728211354-c7608f3a8462 h1:UreQrH7DbFXSi9ZFox6FNT3WBooWmdANpU+IfkT1T4I=
 golang.org/x/net v0.0.0-20220728211354-c7608f3a8462/go.mod h1:YDH+HFinaLZZlnHAfSS6ZXJJ9M9t4Dl22yv3iI2vPwk=
-golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 h1:WIoqL4EROvwiPdUtaip4VcDdpZ4kha7wBWZrbVKCIZg=
-golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 h1:CBpWXWQpIRjzmkkA+M7q9Fqnwd2mZr3AFqexg8YTfoM=
+golang.org/x/sys v0.0.0-20220731174439-a90be440212d h1:Sv5ogFZatcgIMMtBSTTAgMYsicp25MXBubjXNDKwm80=
+golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 h1:Q5284mrmYTpACcm+eAKjKJH48BBwSyfJqmmGDTtT8Vc=
