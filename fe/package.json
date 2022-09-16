@@ -1,6 +1,6 @@
 {
   "name": "share-fe",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "",
   "scripts": {
     "start": "NODE_ENV=development node ./scripts/start.js",
@@ -10,8 +10,8 @@
   "author": "whoisnian",
   "license": "MIT",
   "devDependencies": {
-    "esbuild": "^0.14.36",
-    "standard": "^16.0.4"
+    "esbuild": "^0.15.7",
+    "standard": "^17.0.0"
   },
   "standard": {
     "globals": [
