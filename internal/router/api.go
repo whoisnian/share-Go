@@ -16,7 +16,7 @@ import (
 	"github.com/whoisnian/glb/httpd"
 	"github.com/whoisnian/glb/logger"
 	"github.com/whoisnian/glb/util/fsutil"
-	"github.com/whoisnian/share-Go/internal/config"
+	"github.com/whoisnian/share-Go/internal/global"
 )
 
 const (
@@ -81,7 +81,7 @@ func openFile(name string) (*lockedFile, error) {
 }
 
 func fileInfoHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -94,7 +94,7 @@ func fileInfoHandler(store *httpd.Store) {
 }
 
 func newFileHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	file, err := createFile(path)
 	if err != nil {
 		logger.Panic(err)
@@ -108,7 +108,7 @@ func newFileHandler(store *httpd.Store) {
 }
 
 func deleteFileHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	if err := os.Remove(path); err != nil {
 		if errors.Is(err, syscall.ENOTEMPTY) {
 			store.W.WriteHeader(http.StatusBadRequest)
@@ -119,7 +119,7 @@ func deleteFileHandler(store *httpd.Store) {
 }
 
 func listDirHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	dir, err := openFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -148,21 +148,21 @@ func listDirHandler(store *httpd.Store) {
 }
 
 func newDirHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		logger.Panic(err)
 	}
 }
 
 func deleteDirHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	if err := os.RemoveAll(path); err != nil {
 		logger.Panic(err)
 	}
 }
 
 func rawHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -225,7 +225,7 @@ func archiveDirAsZip(dirPath string, zipWriter *zip.Writer) error {
 }
 
 func downloadHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -264,7 +264,7 @@ func downloadHandler(store *httpd.Store) {
 }
 
 func uploadHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(config.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	reader, err := store.R.MultipartReader()
 	if err != nil {
 		logger.Panic(err)

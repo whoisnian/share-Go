@@ -7,7 +7,7 @@ import (
 
 	"github.com/whoisnian/glb/httpd"
 	"github.com/whoisnian/glb/tasklane"
-	"github.com/whoisnian/share-Go/internal/config"
+	"github.com/whoisnian/share-Go/internal/global"
 	"golang.org/x/net/webdav"
 )
 
@@ -17,7 +17,7 @@ var downloadTaskLane *tasklane.TaskLane
 type jsonMap map[string]interface{}
 
 func checkReadOnly(handler httpd.HandlerFunc) httpd.HandlerFunc {
-	if config.ReadOnly {
+	if global.CFG.ReadOnly {
 		return func(store *httpd.Store) { store.W.WriteHeader(http.StatusForbidden) }
 	} else {
 		return handler
@@ -30,14 +30,14 @@ func Init() *httpd.Mux {
 	downloadTaskLane = tasklane.New(context.Background(), 2, 16)
 
 	webdavHander := func(store *httpd.Store) {
-		if !config.ReadOnly ||
+		if !global.CFG.ReadOnly ||
 			store.R.Method == "PROPFIND" ||
 			store.R.Method == "GET" ||
 			store.R.Method == "HEAD" ||
 			store.R.Method == "OPTIONS" {
 			(&webdav.Handler{
 				Prefix:     "/webdav",
-				FileSystem: webdav.Dir(config.RootPath),
+				FileSystem: webdav.Dir(global.CFG.RootPath),
 				LockSystem: webdav.NewMemLS(),
 			}).ServeHTTP(store.W, store.R)
 		} else {
