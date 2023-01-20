@@ -8,7 +8,10 @@ module.exports.buildConfig = {
   platform: 'browser',
   bundle: true,
   minify: isProduction,
-  define: { __PACKAGE_VERSION__: `"${version}"` },
+  define: {
+    __PACKAGE_VERSION__: `"${version}"`,
+    __DEBUG__: `${!isProduction}`
+  },
   entryPoints: [fromRoot('src/app.js')],
   entryNames: '[name]-[hash]',
   outdir: fromOutput('static'),

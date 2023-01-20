@@ -2,6 +2,8 @@ import { init404Page } from 'pages/404'
 import { initViewPage } from 'pages/view'
 import { getPackageVersion } from 'utils/function'
 
+__DEBUG__ && new EventSource('/esbuild').addEventListener('change', () => window.location.reload())
+
 const routerList = [
   ['^/view(/|$)', initViewPage]
 ];
