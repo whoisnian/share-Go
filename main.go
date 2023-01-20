@@ -22,7 +22,7 @@ func main() {
 	logger.SetColorful(global.CFG.Debug)
 
 	predictAddr := global.CFG.HTTPListenAddr
-	if host, port, err := net.SplitHostPort(global.CFG.HTTPListenAddr); err == nil && host == "0.0.0.0" {
+	if host, port, err := net.SplitHostPort(global.CFG.HTTPListenAddr); err == nil && (host == "" || host == "0.0.0.0") {
 		if ip, err := netutil.GetOutBoundIP(); err == nil {
 			predictAddr = net.JoinHostPort(ip.String(), port)
 		}
