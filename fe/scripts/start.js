@@ -1,6 +1,6 @@
 const { createServer, request: httpRequest } = require('http')
 const { request: httpsRequest } = require('https')
-const { serve } = require('esbuild')
+const { context: esContext } = require('esbuild')
 const { generateHtmlFromTemplate, copyPlugin } = require('./plugin')
 const { fromRoot, fromOutput } = require('./function')
 const { buildConfig } = require('./esbuild.config')
@@ -25,13 +25,15 @@ const proxyTransform = (url) => {
   return null
 }
 
-serve({
-  servedir: fromOutput()
-}, {
-  ...buildConfig,
-  entryNames: '[name]',
-  plugins: [copyPlugin(fromRoot('public'), fromOutput())]
-}).then(result => {
+const runMain = async () => {
+  const esCtx = await esContext({
+    ...buildConfig,
+    entryNames: '[name]',
+    plugins: [copyPlugin(fromRoot('public'), fromOutput())]
+  })
+  await esCtx.watch()
+  const esServeRes = await esCtx.serve({ servedir: fromOutput() })
+
   createServer((req, res) => {
     if (req.url === '/') {
       res.writeHead(302, { 'location': '/view/' })
@@ -39,7 +41,7 @@ serve({
       return
     }
     const url = proxyTransform(req.url)
-    const proxyReq = request(url || `http://${result.host}:${result.port}${req.url}`, {
+    const proxyReq = request(url || `http://${esServeRes.host}:${esServeRes.port}${req.url}`, {
       method: req.method,
       headers: req.headers
     }, proxyRes => {
@@ -60,4 +62,6 @@ serve({
   }).listen(9100, () => {
     console.log('esbuild dev server started: <http://127.0.0.1:9100>')
   })
-})
+}
+
+runMain()

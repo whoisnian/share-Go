@@ -10,7 +10,7 @@
   "author": "whoisnian",
   "license": "MIT",
   "devDependencies": {
-    "esbuild": "^0.15.7",
+    "esbuild": "^0.17.3",
     "standard": "^17.0.0"
   },
   "standard": {
