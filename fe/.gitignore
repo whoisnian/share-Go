@@ -1,5 +1,6 @@
 # Ignore js dep
 /node_modules
+/.npmrc
 
 # Ignore output
 /dist/*
