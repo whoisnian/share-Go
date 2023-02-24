@@ -263,6 +263,36 @@ func downloadHandler(store *httpd.Store) {
 	}
 }
 
+func renameHandler(store *httpd.Store) {
+	fromPath := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
+	toPath := fsutil.ResolveBase(global.CFG.RootPath, store.R.URL.Query().Get("to"))
+
+	_, err := os.Stat(fromPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			store.W.WriteHeader(http.StatusNotFound)
+			store.RespondJson(jsonMap{"Message": "Source file or folder not found"})
+			return
+		}
+		logger.Panic(err)
+	}
+
+	if _, err := os.Stat(toPath); err == nil {
+		store.W.WriteHeader(http.StatusConflict)
+		store.RespondJson(jsonMap{"Message": "Destination file or folder already exists"})
+		return
+	}
+
+	toPathParent := filepath.Dir(toPath)
+	if err := os.MkdirAll(toPathParent, os.ModePerm); err != nil {
+		logger.Panic(err)
+	}
+	if err := os.Rename(fromPath, toPath); err != nil {
+		logger.Panic(err)
+	}
+	store.RespondJson(jsonMap{"Message": "Success"})
+}
+
 func uploadHandler(store *httpd.Store) {
 	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	reader, err := store.R.MultipartReader()
