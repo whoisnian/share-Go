@@ -1,8 +1,9 @@
-import { FileType, requestListDir, requestDeleteRecursively, requestCreateDir } from 'api/storage'
+import { FileType, requestListDir, requestDeleteRecursively, requestCreateDir, requestRenameFile } from 'api/storage'
 import { createIcon, createMimeIcon } from 'components/icon'
 import { createContextMenu } from 'components/contextMenu'
 import { createInputDialog } from 'components/inputDialog'
 import { createUploadDialog } from 'components/uploadDialog'
+import { createInfoDialog } from 'components/infoDialog'
 import { createElement, downloadFile, copyText } from 'utils/element'
 import { calcFromBytes, calcRelativeTime, joinPath, openUrl, openUrlInNewTab, reloadPage, pathExt } from 'utils/function'
 import './style.css'
@@ -15,7 +16,7 @@ const createHeader = (oriPath) => {
   const parentIcon = createIcon('folder-parent', { class: 'DirView-iconButton', title: 'Go to parent folder' })
   parentIcon.onclick = () => openUrl('/view' + joinPath('/', oriPath, '..'))
   const refreshIcon = createIcon('refresh', { class: 'DirView-iconButton', title: 'Refresh' })
-  refreshIcon.onclick = () => reloadPage()
+  refreshIcon.onclick = reloadPage
   const homeIcon = createIcon('home', { class: 'DirView-iconButton', title: 'Go to home' })
   homeIcon.onclick = () => openUrl('/view/')
   const pathSpan = createElement('span', { class: 'DirView-pathSpan', title: currentPath })
@@ -23,32 +24,9 @@ const createHeader = (oriPath) => {
   const pasteIcon = createIcon('paste', { class: 'DirView-iconButton', title: 'Copy current url' })
   pasteIcon.onclick = () => copyText(window.location.href)
   const folderNewIcon = createIcon('folder-new', { class: 'DirView-iconButton', title: 'Create new folder' })
-  folderNewIcon.onclick = () => {
-    const inputDialog = createInputDialog('Folder Name:', 'new folder', (dirName) => {
-      requestCreateDir(joinPath('/', oriPath, encodeURIComponent(dirName))).then(() => reloadPage())
-    })
-    const removeSelf = (event) => {
-      if (event.target === inputDialog) {
-        inputDialog.remove()
-        document.removeEventListener('click', removeSelf)
-      }
-    }
-    document.addEventListener('click', removeSelf)
-    header.appendChild(inputDialog)
-    inputDialog.focus()
-  }
+  folderNewIcon.onclick = () => createInputDialog(header, 'Folder Name:', 'new folder', (dirName) => requestCreateDir(joinPath('/', oriPath, encodeURIComponent(dirName))).then(reloadPage))
   const fileNewIcon = createIcon('file-new', { class: 'DirView-iconButton', title: 'Create new file' })
-  fileNewIcon.onclick = () => {
-    const { uploadDialog } = createUploadDialog(joinPath('/', oriPath))
-    const removeSelf = (event) => {
-      if (event.target === uploadDialog) {
-        uploadDialog.remove()
-        document.removeEventListener('click', removeSelf)
-      }
-    }
-    document.addEventListener('click', removeSelf)
-    header.appendChild(uploadDialog)
-  }
+  fileNewIcon.onclick = () => createUploadDialog(header, joinPath('/', oriPath))
   const sortIcon = createIcon('sort', { class: 'DirView-iconButton', title: 'Sort by' })
   const {
     contextMenu: sortMenu,
@@ -92,8 +70,10 @@ const createHeader = (oriPath) => {
   return header
 }
 
-/** @param { string } oriPath */
-/** @param { import('api/storage').FileInfo } fileInfo */
+/**
+ * @param { string } oriPath
+ * @param { import('api/storage').FileInfo } fileInfo
+ */
 const createFileItem = (oriPath, fileInfo) => {
   const fileItem = createElement('div', { id: fileInfo.Name, class: 'DirView-fileInfo' })
 
@@ -167,15 +147,7 @@ const createDirView = async (oriPath) => {
   // Drag-and-Drop File Uploader
   window.ondragenter = window.ondragover = (e) => e.preventDefault()
   window.ondrop = (e) => {
-    const { uploadDialog, uploadFiles } = createUploadDialog(joinPath('/', oriPath))
-    const removeSelf = (event) => {
-      if (event.target === uploadDialog) {
-        uploadDialog.remove()
-        document.removeEventListener('click', removeSelf)
-      }
-    }
-    document.addEventListener('click', removeSelf)
-    main.appendChild(uploadDialog)
+    const { uploadFiles } = createUploadDialog(main, joinPath('/', oriPath))
     uploadFiles(e.dataTransfer.files)
     e.preventDefault()
   }
@@ -197,7 +169,13 @@ const createDirView = async (oriPath) => {
   }, {
     icon: 'edit',
     name: '重命名',
-    listener: () => window.alert('todo')
+    listener: ({ data }) => createInputDialog(main, 'New Name:', data.Name, (newName) => {
+      const to = newName.startsWith('/') ? newName : joinPath('/', oriPath, newName)
+      requestRenameFile(joinPath('/', oriPath, encodeURIComponent(data.Name)), to).then(({ ok, content }) => {
+        if (ok) return reloadPage()
+        createInfoDialog(main, 'Error', content.Message)
+      })
+    })
   }, {
     icon: 'download',
     name: '下载',

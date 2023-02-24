@@ -55,6 +55,7 @@ func Init() *httpd.Mux {
 
 	mux.Handle("/api/raw/*", "GET", rawHandler)
 	mux.Handle("/api/download/*", "GET", downloadHandler)
+	mux.Handle("/api/rename/*", "POST", checkReadOnly(renameHandler))
 	mux.Handle("/api/upload/*", "POST", checkReadOnly(uploadHandler))
 
 	mux.Handle("/webdav/*", "*", webdavHander)
