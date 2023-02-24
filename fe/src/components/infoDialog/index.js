@@ -2,6 +2,7 @@ import { createElement } from 'utils/element'
 import './style.css'
 
 /**
+ * @param { HTMLElement } parent
  * @param { string } title
  * @param { string } content
  */
@@ -15,22 +16,18 @@ const createInfoDialog = (parent, title, content) => {
   const button = createElement('div', { class: 'InfoDialog-button' })
   button.textContent = 'OK'
 
-  const isCloseEvent = (event) => {
-    switch (event.type) {
-      case 'click': return (event.target === infoDialog || event.target === button)
-      case 'keypress': return event.key === 'Enter'
-      default: return false
-    }
+  const keyCheck = (event) => {
+    if (event.key === 'Enter') button.click()
   }
   const removeSelf = (event) => {
-    if (isCloseEvent(event)) {
-      infoDialog.remove()
+    if (event.target === infoDialog || event.target === button) {
       document.removeEventListener('click', removeSelf)
-      document.removeEventListener('keypress', removeSelf)
+      document.removeEventListener('keypress', keyCheck)
+      infoDialog.remove()
     }
   }
   document.addEventListener('click', removeSelf)
-  document.addEventListener('keypress', removeSelf)
+  document.addEventListener('keypress', keyCheck)
   button.onclick = removeSelf
 
   popup.appendChild(header)

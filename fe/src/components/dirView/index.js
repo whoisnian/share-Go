@@ -15,7 +15,7 @@ const createHeader = (oriPath) => {
   const parentIcon = createIcon('folder-parent', { class: 'DirView-iconButton', title: 'Go to parent folder' })
   parentIcon.onclick = () => openUrl('/view' + joinPath('/', oriPath, '..'))
   const refreshIcon = createIcon('refresh', { class: 'DirView-iconButton', title: 'Refresh' })
-  refreshIcon.onclick = () => reloadPage()
+  refreshIcon.onclick = reloadPage
   const homeIcon = createIcon('home', { class: 'DirView-iconButton', title: 'Go to home' })
   homeIcon.onclick = () => openUrl('/view/')
   const pathSpan = createElement('span', { class: 'DirView-pathSpan', title: currentPath })
@@ -25,7 +25,7 @@ const createHeader = (oriPath) => {
   const folderNewIcon = createIcon('folder-new', { class: 'DirView-iconButton', title: 'Create new folder' })
   folderNewIcon.onclick = () => {
     const inputDialog = createInputDialog('Folder Name:', 'new folder', (dirName) => {
-      requestCreateDir(joinPath('/', oriPath, encodeURIComponent(dirName))).then(() => reloadPage())
+      requestCreateDir(joinPath('/', oriPath, encodeURIComponent(dirName))).then(reloadPage)
     })
     const removeSelf = (event) => {
       if (event.target === inputDialog) {
@@ -38,17 +38,7 @@ const createHeader = (oriPath) => {
     inputDialog.focus()
   }
   const fileNewIcon = createIcon('file-new', { class: 'DirView-iconButton', title: 'Create new file' })
-  fileNewIcon.onclick = () => {
-    const { uploadDialog } = createUploadDialog(joinPath('/', oriPath))
-    const removeSelf = (event) => {
-      if (event.target === uploadDialog) {
-        uploadDialog.remove()
-        document.removeEventListener('click', removeSelf)
-      }
-    }
-    document.addEventListener('click', removeSelf)
-    header.appendChild(uploadDialog)
-  }
+  fileNewIcon.onclick = () => createUploadDialog(header, joinPath('/', oriPath))
   const sortIcon = createIcon('sort', { class: 'DirView-iconButton', title: 'Sort by' })
   const {
     contextMenu: sortMenu,

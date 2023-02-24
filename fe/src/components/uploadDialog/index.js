@@ -4,11 +4,10 @@ import { reloadPage } from 'utils/function'
 import './style.css'
 
 /**
- * @param { string } name
- * @param { string } preset
- * @param { function } listener
+ * @param { HTMLElement } parent
+ * @param { string } base
  */
-const createUploadDialog = (base) => {
+const createUploadDialog = (parent, base) => {
   const uploadDialog = createElement('div', { class: 'UploadDialog-modal' })
   const popup = createElement('div', { class: 'UploadDialog-popup' })
   const header = createElement('div', { class: 'UploadDialog-header' })
@@ -51,19 +50,8 @@ const createUploadDialog = (base) => {
     } else if (fileList && fileList.length > 1) {
       uploadContent.value = `Choosed ${fileList.length} files.`
     }
-    requestCreateFiles(base, fileList, updateProgress).then(() => {
-      uploadDialog.remove()
-      reloadPage()
-    }).catch((e) => {
-      console.error(e)
-      uploadDialog.remove()
-    })
+    requestCreateFiles(base, fileList, updateProgress).then(reloadPage).catch(console.error)
   }
-  uploadButton.onclick = () => {
-    chooseFile(uploadFiles, true)
-  }
-  fromLocal.tabContent.appendChild(uploadButton)
-  fromLocal.tabContent.appendChild(uploadContent)
 
   // 输入 url 从远端下载
   const fromUrl = createElement('div', { class: 'UploadDialog-tabItem' })
@@ -72,21 +60,38 @@ const createUploadDialog = (base) => {
   const input = createElement('input', { class: 'UploadDialog-input', type: 'text' })
   const button = createElement('div', { class: 'UploadDialog-button' })
   button.textContent = 'OK'
-  button.onclick = () => {
+  const downloadFiles = () => {
     if (input.value?.length > 0) {
       const urlList = input.value.split(/[,，]/)
-      requestDownloadFiles(base, urlList).then(() => {
-        uploadDialog.remove()
-        reloadPage()
-      }).catch((e) => {
-        console.error(e)
-        uploadDialog.remove()
-      })
+      requestDownloadFiles(base, urlList).then(reloadPage).catch(console.error)
     }
   }
+
+  const keyCheck = (event) => {
+    if (event.target === input && event.key === 'Enter') button.click()
+  }
+  const removeSelf = (event) => {
+    if (event.target === uploadDialog || event.target === uploadButton || event.target === button) {
+      document.removeEventListener('click', removeSelf)
+      input.removeEventListener('keypress', keyCheck)
+      uploadDialog.remove()
+    }
+  }
+  document.addEventListener('click', removeSelf)
+  input.addEventListener('keypress', keyCheck)
+  uploadButton.onclick = (event) => {
+    chooseFile(uploadFiles, true)
+    removeSelf(event)
+  }
+  button.onclick = (event) => {
+    downloadFiles()
+    removeSelf(event)
+  }
+
+  fromLocal.tabContent.appendChild(uploadButton)
+  fromLocal.tabContent.appendChild(uploadContent)
   fromUrl.tabContent.appendChild(input)
   fromUrl.tabContent.appendChild(button)
-
   tab.appendChildWithTabContent(fromLocal)
   tab.appendChildWithTabContent(fromUrl)
   tab.changeTo(fromLocal)
@@ -95,6 +100,8 @@ const createUploadDialog = (base) => {
   popup.appendChild(tab)
   tabList.forEach(t => popup.appendChild(t.tabContent))
   uploadDialog.appendChild(popup)
+  parent.appendChild(uploadDialog)
+
   return {
     uploadDialog,
     uploadFiles
