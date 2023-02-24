@@ -26,12 +26,16 @@
 .InfoDialog-header {
   display: flex;
   font-size: large;
+  font-weight: bold;
 }
 
 .InfoDialog-body {
   display: flex;
   align-self: stretch;
+  background-color: #ddf4ff;
   font-size: medium;
+  border: 1px solid #54aeff66;
+  border-radius: 3px;
   padding: 5px;
   margin-top: 15px;
   outline: none;
