@@ -1,4 +1,4 @@
-import { fetchDeleteHead, fetchGetJSONWithStatus, fetchPostHead } from 'utils/request'
+import { fetchDeleteHead, fetchGetJSONWithStatus, fetchPostJSONWithStatus, fetchPostHead } from 'utils/request'
 
 /** @enum { number } */
 const FileType = {
@@ -26,6 +26,14 @@ const requestFileInfo = async (path) => {
 const requestListDir = async (path) => {
   /** @type {{ ok: boolean, status: number, content: { FileInfos: FileInfo[] } | null }} */
   const result = await fetchGetJSONWithStatus(`/api/dir${path}`)
+  return result
+}
+
+/** @param { string } from */
+/** @param { string } to */
+const requestRenameFile = async (from, to) => {
+  /** @type {{ ok: boolean, status: number, content: { Message: string } }} */
+  const result = await fetchPostJSONWithStatus(`/api/rename${from}?${new URLSearchParams({ to })}`, {})
   return result
 }
 
@@ -86,6 +94,7 @@ export {
   FileType,
   requestFileInfo,
   requestListDir,
+  requestRenameFile,
   requestCreateFiles,
   requestDownloadFiles,
   requestCreateDir,

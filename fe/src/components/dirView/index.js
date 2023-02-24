@@ -1,8 +1,9 @@
-import { FileType, requestListDir, requestDeleteRecursively, requestCreateDir } from 'api/storage'
+import { FileType, requestListDir, requestDeleteRecursively, requestCreateDir, requestRenameFile } from 'api/storage'
 import { createIcon, createMimeIcon } from 'components/icon'
 import { createContextMenu } from 'components/contextMenu'
 import { createInputDialog } from 'components/inputDialog'
 import { createUploadDialog } from 'components/uploadDialog'
+import { createInfoDialog } from 'components/infoDialog'
 import { createElement, downloadFile, copyText } from 'utils/element'
 import { calcFromBytes, calcRelativeTime, joinPath, openUrl, openUrlInNewTab, reloadPage, pathExt } from 'utils/function'
 import './style.css'
@@ -144,15 +145,7 @@ const createDirView = async (oriPath) => {
   // Drag-and-Drop File Uploader
   window.ondragenter = window.ondragover = (e) => e.preventDefault()
   window.ondrop = (e) => {
-    const { uploadDialog, uploadFiles } = createUploadDialog(joinPath('/', oriPath))
-    const removeSelf = (event) => {
-      if (event.target === uploadDialog) {
-        uploadDialog.remove()
-        document.removeEventListener('click', removeSelf)
-      }
-    }
-    document.addEventListener('click', removeSelf)
-    main.appendChild(uploadDialog)
+    const { uploadFiles } = createUploadDialog(main, joinPath('/', oriPath))
     uploadFiles(e.dataTransfer.files)
     e.preventDefault()
   }
@@ -174,7 +167,13 @@ const createDirView = async (oriPath) => {
   }, {
     icon: 'edit',
     name: '重命名',
-    listener: () => window.alert('todo')
+    listener: ({ data }) => createInputDialog(main, 'New Name:', data.Name, (newName) => {
+      const to = newName.startsWith('/') ? newName : joinPath('/', oriPath, newName)
+      requestRenameFile(joinPath('/', oriPath, encodeURIComponent(data.Name)), to).then(({ ok, content }) => {
+        if (ok) return reloadPage()
+        createInfoDialog(main, 'Error', content.Message)
+      })
+    })
   }, {
     icon: 'download',
     name: '下载',
