@@ -29,17 +29,21 @@ const requestListDir = async (path) => {
   return result
 }
 
-/** @param { string } from */
-/** @param { string } to */
+/**
+ * @param { string } from
+ * @param { string } to
+ */
 const requestRenameFile = async (from, to) => {
   /** @type {{ ok: boolean, status: number, content: { Message: string } }} */
   const result = await fetchPostJSONWithStatus(`/api/rename${from}?${new URLSearchParams({ to })}`, {})
   return result
 }
 
-/** @param { string } path */
-/** @param { FileList } files */
-/** @param { Function } updateProgress */
+/**
+ * @param { string } path
+ * @param { FileList } files
+ * @param { Function } updateProgress
+ */
 const requestCreateFiles = async (path, files, updateProgress) => {
   for (let i = 0; i < files.length; i++) {
     const formData = new FormData()
@@ -66,8 +70,10 @@ const requestCreateFiles = async (path, files, updateProgress) => {
   }
 }
 
-/** @param { string } path */
-/** @param { string[] } urlList */
+/**
+ * @param { string } path
+ * @param { string[] } urlList
+ */
 const requestDownloadFiles = async (path, urlList) => {
   const formData = new FormData()
   for (let i = 0; i < urlList.length; i++) {

@@ -70,8 +70,10 @@ const createHeader = (oriPath) => {
   return header
 }
 
-/** @param { string } oriPath */
-/** @param { import('api/storage').FileInfo } fileInfo */
+/**
+ * @param { string } oriPath
+ * @param { import('api/storage').FileInfo } fileInfo
+ */
 const createFileItem = (oriPath, fileInfo) => {
   const fileItem = createElement('div', { id: fileInfo.Name, class: 'DirView-fileInfo' })
 
