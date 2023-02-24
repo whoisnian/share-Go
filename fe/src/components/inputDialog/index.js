@@ -2,11 +2,12 @@ import { createElement } from 'utils/element'
 import './style.css'
 
 /**
+ * @param { HTMLElement } parent
  * @param { string } name
  * @param { string } preset
  * @param { function } listener
  */
-const createInputDialog = (name, preset, listener) => {
+const createInputDialog = (parent, name, preset, listener) => {
   const inputDialog = createElement('div', { class: 'InputDialog-modal' })
   const popup = createElement('div', { class: 'InputDialog-popup' })
   const header = createElement('div', { class: 'InputDialog-header' })
@@ -19,15 +20,31 @@ const createInputDialog = (name, preset, listener) => {
   }
   const button = createElement('div', { class: 'InputDialog-button' })
   button.textContent = 'OK'
-  button.onclick = () => {
+
+  const keyCheck = (event) => {
+    if (event.target === input && event.key === 'Enter') button.click()
+  }
+  const removeSelf = (event) => {
+    if (event.target === inputDialog || event.target === button) {
+      document.removeEventListener('click', removeSelf)
+      input.removeEventListener('keypress', keyCheck)
+      inputDialog.remove()
+    }
+  }
+  document.addEventListener('click', removeSelf)
+  input.addEventListener('keypress', keyCheck)
+  button.onclick = (event) => {
     listener(input.value)
-    inputDialog.remove()
+    removeSelf(event)
   }
 
   popup.appendChild(header)
   popup.appendChild(input)
   popup.appendChild(button)
   inputDialog.appendChild(popup)
+  parent.appendChild(inputDialog)
+
+  inputDialog.focus()
   return inputDialog
 }
 
