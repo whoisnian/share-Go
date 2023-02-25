@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 
@@ -19,6 +20,11 @@ func main() {
 		logger.Fatal(err)
 	}
 	logger.SetDebug(global.CFG.Debug)
+
+	if global.CFG.Version {
+		fmt.Printf("share-Go %s(%s)\n", global.Version, global.BuildTime)
+		return
+	}
 
 	predictAddr := global.CFG.HTTPListenAddr
 	if host, port, err := net.SplitHostPort(global.CFG.HTTPListenAddr); err == nil && (host == "" || host == "0.0.0.0") {
