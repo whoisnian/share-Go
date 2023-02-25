@@ -109,6 +109,14 @@ func newFileHandler(store *httpd.Store) {
 
 func deleteFileHandler(store *httpd.Store) {
 	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
+
+	fileInfo, _ := os.Stat(path)
+	rootInfo, _ := os.Stat(global.CFG.RootPath)
+	if os.SameFile(rootInfo, fileInfo) {
+		store.W.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	if err := os.Remove(path); err != nil {
 		if errors.Is(err, syscall.ENOTEMPTY) {
 			store.W.WriteHeader(http.StatusBadRequest)
@@ -156,6 +164,14 @@ func newDirHandler(store *httpd.Store) {
 
 func deleteDirHandler(store *httpd.Store) {
 	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
+
+	dirInfo, _ := os.Stat(path)
+	rootInfo, _ := os.Stat(global.CFG.RootPath)
+	if os.SameFile(rootInfo, dirInfo) {
+		store.W.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	if err := os.RemoveAll(path); err != nil {
 		logger.Panic(err)
 	}
@@ -267,7 +283,7 @@ func renameHandler(store *httpd.Store) {
 	fromPath := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	toPath := fsutil.ResolveBase(global.CFG.RootPath, store.R.URL.Query().Get("to"))
 
-	_, err := os.Stat(fromPath)
+	fromInfo, err := os.Stat(fromPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			store.W.WriteHeader(http.StatusNotFound)
@@ -275,6 +291,12 @@ func renameHandler(store *httpd.Store) {
 			return
 		}
 		logger.Panic(err)
+	}
+	rootInfo, _ := os.Stat(global.CFG.RootPath)
+	if os.SameFile(rootInfo, fromInfo) {
+		store.W.WriteHeader(http.StatusForbidden)
+		store.RespondJson(jsonMap{"Message": "Forbidden to rename the root folder"})
+		return
 	}
 
 	if _, err := os.Stat(toPath); err == nil {
