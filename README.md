@@ -1,5 +1,5 @@
 # share-Go
-[![Release Status](https://github.com/whoisnian/share-Go/workflows/release/badge.svg?branch=master)](https://github.com/whoisnian/share-Go/actions?query=branch%3Amaster)
+[![Release Status](https://github.com/whoisnian/share-Go/workflows/release/badge.svg)](https://github.com/whoisnian/share-Go/actions?query=workflow%3Arelease)
 
 ## Usage
 Download the latest binary from [Release Page](https://github.com/whoisnian/share-Go/releases) according to your operating system and architecture.
@@ -47,4 +47,4 @@ WantedBy=multi-user.target
   npm install
   npm run start # live reloading for the javascript code
   ```
-* visit http://127.0.0.1:9100 in web browser.
+* visit http://127.0.0.1:9100 in your web browser.
