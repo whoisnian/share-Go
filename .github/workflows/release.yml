@@ -7,8 +7,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      CGO_ENABLED: 0
     steps:
       - uses: actions/checkout@v3
 
@@ -34,12 +32,13 @@ jobs:
           check-latest: true
           cache: true
 
-      - name: Build static
-        run: |
-          GOOS=linux GOARCH=amd64 go build -v -ldflags="-s -w -extldflags '-static'" -o share-Go-linux-amd64-${{ github.ref_name }} .
-          GOOS=linux GOARCH=arm64 go build -v -ldflags="-s -w -extldflags '-static'" -o share-Go-linux-amd64-${{ github.ref_name }} .
+      - name: Build static binaries
+        run: bash .github/build.sh all
+
+      - name: Gzip build results
+        run: gzip share-Go-*
 
       - name: Upload release
         uses: softprops/action-gh-release@v1
         with:
-          files: share-Go-*
+          files: share-Go-*.gz
