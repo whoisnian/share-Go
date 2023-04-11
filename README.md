@@ -1,5 +1,5 @@
 # share-Go
-[![Release Status](https://github.com/whoisnian/share-Go/workflows/release/badge.svg)](https://github.com/whoisnian/share-Go/actions?query=workflow%3Arelease)
+[![Release Status](https://github.com/whoisnian/share-Go/actions/workflows/release.yml/badge.svg)](https://github.com/whoisnian/share-Go/actions/workflows/release.yml)
 
 ## Usage
 Download the latest binary from [Release Page](https://github.com/whoisnian/share-Go/releases) according to your operating system and architecture.
