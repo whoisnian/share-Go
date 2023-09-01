@@ -10,8 +10,8 @@
   "author": "whoisnian",
   "license": "MIT",
   "devDependencies": {
-    "esbuild": "^0.17.3",
-    "standard": "^17.0.0"
+    "esbuild": "^0.19.4",
+    "standard": "^17.1.0"
   },
   "standard": {
     "globals": [
