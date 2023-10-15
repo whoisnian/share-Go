@@ -46,6 +46,7 @@ func Init() *httpd.Mux {
 	}
 
 	mux := httpd.NewMux()
+	mux.HandleRelay(global.LOG.Relay)
 	mux.Handle("/api/file/*", "GET", fileInfoHandler)
 	mux.Handle("/api/file/*", "POST", checkReadOnly(newFileHandler))
 	mux.Handle("/api/file/*", "DELETE", checkReadOnly(deleteFileHandler))

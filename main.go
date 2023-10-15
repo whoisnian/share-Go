@@ -1,13 +1,13 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
-	"github.com/whoisnian/glb/ansi"
-	"github.com/whoisnian/glb/config"
-	"github.com/whoisnian/glb/logger"
 	"github.com/whoisnian/glb/util/netutil"
 	"github.com/whoisnian/glb/util/osutil"
 	"github.com/whoisnian/share-Go/internal/global"
@@ -15,12 +15,7 @@ import (
 )
 
 func main() {
-	err := config.FromCommandLine(&global.CFG)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	logger.SetDebug(global.CFG.Debug)
-
+	global.Init()
 	if global.CFG.Version {
 		fmt.Printf("share-Go %s(%s)\n", global.Version, global.BuildTime)
 		return
@@ -32,15 +27,23 @@ func main() {
 			predictAddr = net.JoinHostPort(ip.String(), port)
 		}
 	}
-	logger.Info("Try visiting ", ansi.Green, "http://", predictAddr, ansi.Reset, " in your browser.")
+	global.LOG.Info("Try visiting http://" + predictAddr + " in your browser.")
 
+	server := &http.Server{Addr: global.CFG.HTTPListenAddr, Handler: router.Init()}
 	go func() {
-		mux := router.Init()
-		logger.Info("Service httpd started: <http://", global.CFG.HTTPListenAddr, ">")
-		if err := http.ListenAndServe(global.CFG.HTTPListenAddr, logger.Req(logger.Recovery(mux))); err != nil {
-			logger.Fatal(err)
+		global.LOG.Info("Service httpd started: <http://" + global.CFG.HTTPListenAddr + ">")
+		if err := server.ListenAndServe(); errors.Is(err, http.ErrServerClosed) {
+			global.LOG.Warn("Service shutting down")
+		} else if err != nil {
+			global.LOG.Fatal(err.Error())
 		}
 	}()
 
 	osutil.WaitForInterrupt()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		global.LOG.Warn(err.Error())
+	}
 }
