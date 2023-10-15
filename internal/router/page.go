@@ -2,6 +2,7 @@ package router
 
 import (
 	"io"
+	"log/slog"
 	"mime"
 	"net/http"
 	"os"
@@ -10,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/whoisnian/glb/httpd"
-	"github.com/whoisnian/glb/logger"
 	fe "github.com/whoisnian/share-Go/fe/dist"
+	"github.com/whoisnian/share-Go/internal/global"
 )
 
 func serveFileFromFE(store *httpd.Store, path string) {
@@ -21,7 +22,7 @@ func serveFileFromFE(store *httpd.Store, path string) {
 			store.W.WriteHeader(http.StatusNotFound)
 			return
 		}
-		logger.Panic(err)
+		global.LOG.Panic("serveFileFromFE failed", slog.Any("error", err), slog.String("tid", store.GetID()))
 	}
 	defer file.Close()
 
@@ -46,7 +47,7 @@ func serveFileFromFE(store *httpd.Store, path string) {
 		store.W.Header().Set("content-length", strconv.FormatInt(info.Size(), 10))
 	}
 	if _, err := io.CopyN(store.W, file, info.Size()); err != nil {
-		logger.Panic(err)
+		global.LOG.Panic("io.CopyN failed", slog.Any("error", err), slog.String("tid", store.GetID()))
 	}
 }
 
