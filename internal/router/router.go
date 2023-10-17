@@ -2,6 +2,7 @@ package router
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"sync"
 
@@ -29,6 +30,8 @@ func Init() *httpd.Mux {
 
 	downloadTaskLane = tasklane.New(context.Background(), 2, 16)
 
+	webdavFS := webdav.Dir(global.CFG.RootPath)
+	webdavLS := webdav.NewMemLS()
 	webdavHander := func(store *httpd.Store) {
 		if !global.CFG.ReadOnly ||
 			store.R.Method == "PROPFIND" ||
@@ -37,8 +40,11 @@ func Init() *httpd.Mux {
 			store.R.Method == "OPTIONS" {
 			(&webdav.Handler{
 				Prefix:     "/webdav",
-				FileSystem: webdav.Dir(global.CFG.RootPath),
-				LockSystem: webdav.NewMemLS(),
+				FileSystem: webdavFS,
+				LockSystem: webdavLS,
+				Logger: func(_ *http.Request, err error) {
+					global.LOG.Error("webdav.ServeHTTP failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+				},
 			}).ServeHTTP(store.W, store.R)
 		} else {
 			store.W.WriteHeader(http.StatusForbidden)
