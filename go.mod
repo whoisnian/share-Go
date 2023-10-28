@@ -3,7 +3,7 @@ module github.com/whoisnian/share-Go
 go 1.21.3
 
 require (
-	github.com/whoisnian/glb v1.3.1
+	github.com/whoisnian/glb v1.3.2
 	golang.org/x/net v0.17.0
 )
 
