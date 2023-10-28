@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #########################################################################
 # File Name: build.sh
 # Author: nian
@@ -8,7 +8,7 @@
 #########################################################################
 
 export CGO_ENABLED=0
-export BUILDTIME=$(date +%F\ %T)
+export BUILDTIME=$(date --iso-8601=seconds)
 if [[ -z "${GITHUB_REF_NAME}" ]]; then
   export VERSION=$(git describe --tags || echo unknown)
 else
@@ -16,9 +16,8 @@ else
 fi
 
 goBuild() {
-  echo "goBuild $1 $2 $3"
   GOOS="$1" GOARCH="$2" go build -trimpath \
-    -ldflags="-s -w -extldflags=-static \
+    -ldflags="-s -w \
     -X 'github.com/whoisnian/share-Go/internal/global.Version=${VERSION}' \
     -X 'github.com/whoisnian/share-Go/internal/global.BuildTime=${BUILDTIME}'" \
     -o "$3" .
