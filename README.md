@@ -2,23 +2,25 @@
 [![Release Status](https://github.com/whoisnian/share-Go/actions/workflows/release.yml/badge.svg)](https://github.com/whoisnian/share-Go/actions/workflows/release.yml)
 
 ## Usage
-Download the latest binary from [Release Page](https://github.com/whoisnian/share-Go/releases) according to your operating system and architecture.
-### Run in LAN
+Download the latest binary from [Release Page](https://github.com/whoisnian/share-Go/releases) according to your operating system and architecture. Alternatively, docker container is also supported.
+### Run binary directly
 ```sh
 mkdir ./uploads
 ./share-Go -l 0.0.0.0:9000 -p ./uploads
 ```
 ### With linux chroot
 ```sh
-mkdir -p ./share/uploads
-# move share-Go binary into ./share, like:
-# share/
-#   ├── share-Go
-#   └── uploads/
-sudo chroot --userspec=$(id -u):$(id -g) ./share ./share-Go -l 0.0.0.0:9000 -p ./uploads
+mkdir -p ./share/uploads && sudo chown 65534:65534 ./share/uploads
+
+# initialize chroot environment with alpine minirootfs
+wget https://dl-cdn.alpinelinux.org/alpine/v3.18/releases/x86_64/alpine-minirootfs-3.18.4-x86_64.tar.gz
+tar -xvf alpine-minirootfs-3.18.4-x86_64.tar.gz -C ./share && rm alpine-minirootfs-3.18.4-x86_64.tar.gz
+echo 'nameserver 223.5.5.5' > ./share/etc/resolv.conf
+
+# move share-Go binary into ./share and run
+sudo chroot --userspec=65534:65534 ./share /share-Go -l 0.0.0.0:9000 -p /uploads
 ```
-### As systemd service
-`/etc/systemd/system/share-Go.service`
+example `/etc/systemd/system/share-Go.service`:
 ```
 [Unit]
 Description=share-Go Service
@@ -29,17 +31,28 @@ Type=simple
 User=root
 Restart=always
 RestartSec=5s
-ExecStart=/usr/bin/chroot --userspec=nobody:nobody /root/share ./share-Go -l 0.0.0.0:9000 -p ./uploads
+ExecStart=/usr/bin/chroot --userspec=65534:65534 /root/share /share-Go -l 0.0.0.0:9000 -p /uploads
 
 [Install]
 WantedBy=multi-user.target
+```
+### With docker container
+```sh
+mkdir ./uploads
+docker run -d \
+  --name share-go \
+  -e CFG_HTTPLISTENADDR=:9000 \
+  -e CFG_ROOTPATH=/uploads \
+  -p 9000:9000 \
+  -v $(pwd)/uploads:/uploads \
+  ghcr.io/whoisnian/share-go:v0.0.3
 ```
 
 ## Development
 * start backend service:
   ```sh
   mkdir ./uploads
-  go run ./main.go # manually rerun after modifying the golang code
+  go run ./main.go -d # manually rerun after modifying the golang code
   ```
 * start frontend dev server:
   ```sh
