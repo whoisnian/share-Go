@@ -33,7 +33,7 @@ jobs:
           cache: true
 
       - name: Build static binaries
-        run: bash .github/build.sh all
+        run: bash -ex .github/build.sh all
 
       - name: Upload release
         uses: softprops/action-gh-release@v1
