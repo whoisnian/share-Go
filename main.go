@@ -27,11 +27,11 @@ func main() {
 			predictAddr = net.JoinHostPort(ip.String(), port)
 		}
 	}
-	global.LOG.Info("Try visiting http://" + predictAddr + " in your browser.")
+	global.LOG.Infof("Try visiting http://%s in your browser.", predictAddr)
 
 	server := &http.Server{Addr: global.CFG.HTTPListenAddr, Handler: router.Init()}
 	go func() {
-		global.LOG.Info("Service httpd started: <http://" + global.CFG.HTTPListenAddr + ">")
+		global.LOG.Infof("Service httpd started: <http://%s>", global.CFG.HTTPListenAddr)
 		if err := server.ListenAndServe(); errors.Is(err, http.ErrServerClosed) {
 			global.LOG.Warn("Service shutting down")
 		} else if err != nil {
