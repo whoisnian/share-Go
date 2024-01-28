@@ -24,7 +24,7 @@ var (
 	BuildTime = "unknown"
 )
 
-func Init() {
+func Setup() {
 	err := config.FromCommandLine(&CFG)
 	if err != nil {
 		panic(err)

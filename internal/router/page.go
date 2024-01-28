@@ -22,7 +22,9 @@ func serveFileFromFE(store *httpd.Store, path string) {
 			store.W.WriteHeader(http.StatusNotFound)
 			return
 		}
-		global.LOG.Panic("serveFileFromFE failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("serveFileFromFE failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	defer file.Close()
 
@@ -47,7 +49,9 @@ func serveFileFromFE(store *httpd.Store, path string) {
 		store.W.Header().Set("content-length", strconv.FormatInt(info.Size(), 10))
 	}
 	if _, err := io.CopyN(store.W, file, info.Size()); err != nil {
-		global.LOG.Panic("io.CopyN failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("io.CopyN failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 }
 

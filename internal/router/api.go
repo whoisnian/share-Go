@@ -88,7 +88,9 @@ func fileInfoHandler(store *httpd.Store) {
 			store.W.WriteHeader(http.StatusNotFound)
 			return
 		}
-		global.LOG.Panic("os.Stat failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("os.Stat failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	store.RespondJson(parseFileInfo(info))
 }
@@ -97,7 +99,9 @@ func newFileHandler(store *httpd.Store) {
 	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	file, err := createFile(path)
 	if err != nil {
-		global.LOG.Panic("createFile failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("createFile failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	defer file.Close()
 
@@ -122,7 +126,9 @@ func deleteFileHandler(store *httpd.Store) {
 			store.W.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		global.LOG.Panic("os.Remove failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("os.Remove failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -134,7 +140,9 @@ func listDirHandler(store *httpd.Store) {
 			store.W.WriteHeader(http.StatusNotFound)
 			return
 		}
-		global.LOG.Panic("openFile failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("openFile failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	defer dir.Close()
 
@@ -144,7 +152,9 @@ func listDirHandler(store *httpd.Store) {
 			store.W.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		global.LOG.Panic("dir.Readdir failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("dir.Readdir failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	result := make([]respFileInfo, len(infos))
@@ -158,7 +168,9 @@ func listDirHandler(store *httpd.Store) {
 func newDirHandler(store *httpd.Store) {
 	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
-		global.LOG.Panic("os.MkdirAll failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("os.MkdirAll failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -173,7 +185,9 @@ func deleteDirHandler(store *httpd.Store) {
 	}
 
 	if err := os.RemoveAll(path); err != nil {
-		global.LOG.Panic("os.RemoveAll failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("os.RemoveAll failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -185,13 +199,17 @@ func rawHandler(store *httpd.Store) {
 			store.W.WriteHeader(http.StatusNotFound)
 			return
 		}
-		global.LOG.Panic("os.Stat failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("os.Stat failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	if info.Mode().IsRegular() {
 		file, err := openFile(path)
 		if err != nil {
-			global.LOG.Panic("openFile failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+			global.LOG.Error("openFile failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+			store.W.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 		defer file.Close()
 
@@ -248,13 +266,17 @@ func downloadHandler(store *httpd.Store) {
 			store.W.WriteHeader(http.StatusNotFound)
 			return
 		}
-		global.LOG.Panic("os.Stat failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("os.Stat failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	if info.Mode().IsRegular() {
 		file, err := openFile(path)
 		if err != nil {
-			global.LOG.Panic("openFile failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+			global.LOG.Error("openFile failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+			store.W.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 		defer file.Close()
 
@@ -272,7 +294,9 @@ func downloadHandler(store *httpd.Store) {
 		zipWriter := zip.NewWriter(store.W)
 		if err := archiveDirAsZip(path, zipWriter); err != nil {
 			store.W.Header().Del("content-disposition")
-			global.LOG.Panic("archiveDirAsZip failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+			global.LOG.Error("archiveDirAsZip failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+			store.W.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 	} else {
 		store.W.WriteHeader(http.StatusUnprocessableEntity)
@@ -290,7 +314,9 @@ func renameHandler(store *httpd.Store) {
 			store.RespondJson(jsonMap{"Message": "Source file or folder not found"})
 			return
 		}
-		global.LOG.Panic("os.Stat failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("os.Stat failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	rootInfo, _ := os.Stat(global.CFG.RootPath)
 	if os.SameFile(rootInfo, fromInfo) {
@@ -307,10 +333,14 @@ func renameHandler(store *httpd.Store) {
 
 	toPathParent := filepath.Dir(toPath)
 	if err := os.MkdirAll(toPathParent, os.ModePerm); err != nil {
-		global.LOG.Panic("os.MkdirAll failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("os.MkdirAll failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	if err := os.Rename(fromPath, toPath); err != nil {
-		global.LOG.Panic("os.Rename failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("os.Rename failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	store.RespondJson(jsonMap{"Message": "Success"})
 }
@@ -319,7 +349,9 @@ func uploadHandler(store *httpd.Store) {
 	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
 	reader, err := store.R.MultipartReader()
 	if err != nil {
-		global.LOG.Panic("store.R.MultipartReader failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error("store.R.MultipartReader failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	shortestQueue := downloadTaskLane.ShortestQueueIndex()
 	for {
@@ -328,18 +360,24 @@ func uploadHandler(store *httpd.Store) {
 			break
 		}
 		if err != nil {
-			global.LOG.Panic("reader.NextPart failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+			global.LOG.Error("reader.NextPart failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+			store.W.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 		if part.FormName() == "urlList" {
 			url, err := io.ReadAll(part)
 			if err != nil {
-				global.LOG.Panic("io.ReadAll failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+				global.LOG.Error("io.ReadAll failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+				store.W.WriteHeader(http.StatusInternalServerError)
+				return
 			}
 			downloadTaskLane.PushTask(newDownloadTask(store.GetID(), string(url), path), shortestQueue)
 		} else if part.FormName() == "fileList" {
 			file, err := createFile(filepath.Join(path, part.FileName()))
 			if err != nil {
-				global.LOG.Panic("createFile failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+				global.LOG.Error("createFile failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+				store.W.WriteHeader(http.StatusInternalServerError)
+				return
 			}
 			defer file.Close()
 			io.Copy(file, part)

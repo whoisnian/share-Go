@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	global.Init()
+	global.Setup()
 	if global.CFG.Version {
 		fmt.Printf("share-Go %s(%s)\n", global.Version, global.BuildTime)
 		return
@@ -29,7 +29,7 @@ func main() {
 	}
 	global.LOG.Infof("Try visiting http://%s in your browser.", predictAddr)
 
-	server := &http.Server{Addr: global.CFG.HTTPListenAddr, Handler: router.Init()}
+	server := &http.Server{Addr: global.CFG.HTTPListenAddr, Handler: router.Setup()}
 	go func() {
 		global.LOG.Infof("Service httpd started: <http://%s>", global.CFG.HTTPListenAddr)
 		if err := server.ListenAndServe(); errors.Is(err, http.ErrServerClosed) {

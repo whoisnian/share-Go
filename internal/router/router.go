@@ -25,7 +25,7 @@ func checkReadOnly(handler httpd.HandlerFunc) httpd.HandlerFunc {
 	}
 }
 
-func Init() *httpd.Mux {
+func Setup() *httpd.Mux {
 	lockerMap = new(sync.Map)
 
 	downloadTaskLane = tasklane.New(context.Background(), 2, 16)
