@@ -1,12 +1,17 @@
-# Ignore vscode
-.vscode
+# Ignore editor configuration
+.idea/
+.vscode/
 
-# Ignore binary
-/main
-/share-Go
+# Ignore directory of file with `-gitignore`
+**/*-gitignore/**
+**/*-gitignore
 
-# Ignore config
-/config.json
+# Ignore build results
+output/
+main
 
-# Ignore dataDir
+# Ignore config file
+config.json
+
+# Ignore data directory
 /uploads/*

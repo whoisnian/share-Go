@@ -1,6 +1,7 @@
 {
   "Debug": false,
+  "LogFmt": "text",
   "ReadOnly": false,
-  "HTTPListenAddr": "127.0.0.1:9000",
-  "RootPath": "uploads"
+  "RootPath": "uploads",
+  "ListenAddr": "127.0.0.1:9000"
 }
