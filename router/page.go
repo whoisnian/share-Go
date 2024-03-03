@@ -12,7 +12,7 @@ import (
 
 	"github.com/whoisnian/glb/httpd"
 	fe "github.com/whoisnian/share-Go/fe/dist"
-	"github.com/whoisnian/share-Go/internal/global"
+	"github.com/whoisnian/share-Go/global"
 )
 
 func serveFileFromFE(store *httpd.Store, path string) {

@@ -16,7 +16,7 @@ import (
 
 	"github.com/whoisnian/glb/httpd"
 	"github.com/whoisnian/glb/util/fsutil"
-	"github.com/whoisnian/share-Go/internal/global"
+	"github.com/whoisnian/share-Go/global"
 )
 
 const (
@@ -81,7 +81,7 @@ func openFile(name string) (*lockedFile, error) {
 }
 
 func fileInfoHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -96,7 +96,7 @@ func fileInfoHandler(store *httpd.Store) {
 }
 
 func newFileHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
 	file, err := createFile(path)
 	if err != nil {
 		global.LOG.Error("createFile failed", slog.Any("error", err), slog.String("tid", store.GetID()))
@@ -112,7 +112,7 @@ func newFileHandler(store *httpd.Store) {
 }
 
 func deleteFileHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
 
 	fileInfo, _ := os.Stat(path)
 	rootInfo, _ := os.Stat(global.CFG.RootPath)
@@ -133,7 +133,7 @@ func deleteFileHandler(store *httpd.Store) {
 }
 
 func listDirHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
 	dir, err := openFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -166,7 +166,7 @@ func listDirHandler(store *httpd.Store) {
 }
 
 func newDirHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		global.LOG.Error("os.MkdirAll failed", slog.Any("error", err), slog.String("tid", store.GetID()))
 		store.W.WriteHeader(http.StatusInternalServerError)
@@ -175,7 +175,7 @@ func newDirHandler(store *httpd.Store) {
 }
 
 func deleteDirHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
 
 	dirInfo, _ := os.Stat(path)
 	rootInfo, _ := os.Stat(global.CFG.RootPath)
@@ -192,7 +192,7 @@ func deleteDirHandler(store *httpd.Store) {
 }
 
 func rawHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -240,7 +240,7 @@ func archiveDirAsZip(dirPath string, zipWriter *zip.Writer) error {
 		}
 		zipFile, err := zipWriter.CreateHeader(&zip.FileHeader{
 			Name:   relativePath,
-			Method: zip.Store,
+			Method: zip.Deflate,
 		})
 		if err != nil {
 			return err
@@ -259,7 +259,7 @@ func archiveDirAsZip(dirPath string, zipWriter *zip.Writer) error {
 }
 
 func downloadHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -304,8 +304,8 @@ func downloadHandler(store *httpd.Store) {
 }
 
 func renameHandler(store *httpd.Store) {
-	fromPath := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
-	toPath := fsutil.ResolveBase(global.CFG.RootPath, store.R.URL.Query().Get("to"))
+	fromPath := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
+	toPath := fsutil.ResolveUrlPath(global.CFG.RootPath, store.R.URL.Query().Get("to"))
 
 	fromInfo, err := os.Stat(fromPath)
 	if err != nil {
@@ -346,14 +346,14 @@ func renameHandler(store *httpd.Store) {
 }
 
 func uploadHandler(store *httpd.Store) {
-	path := fsutil.ResolveBase(global.CFG.RootPath, store.RouteParamAny())
+	path := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
 	reader, err := store.R.MultipartReader()
 	if err != nil {
 		global.LOG.Error("store.R.MultipartReader failed", slog.Any("error", err), slog.String("tid", store.GetID()))
 		store.W.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	shortestQueue := downloadTaskLane.ShortestQueueIndex()
+	shortestQueue := dTaskLane.ShortestQueueIndex()
 	for {
 		part, err := reader.NextPart()
 		if err == io.EOF {
@@ -371,7 +371,7 @@ func uploadHandler(store *httpd.Store) {
 				store.W.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			downloadTaskLane.PushTask(newDownloadTask(store.GetID(), string(url), path), shortestQueue)
+			dTaskLane.PushTask(newDownloadTask(store.GetID(), string(url), path), shortestQueue)
 		} else if part.FormName() == "fileList" {
 			file, err := createFile(filepath.Join(path, part.FileName()))
 			if err != nil {
