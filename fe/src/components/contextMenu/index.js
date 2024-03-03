@@ -31,8 +31,11 @@ const createContextMenu = (items) => {
     contextData.data = data
     event.cancelBubble = true
     contextMenu.style.display = 'flex'
-    contextMenu.style.top = event.pageY + 'px'
-    contextMenu.style.left = event.pageX + 'px'
+    const { height, width } = contextMenu.getBoundingClientRect()
+    if (height + event.pageY > window.innerHeight) contextMenu.style.top = `${event.pageY - height}px`
+    else contextMenu.style.top = `${event.pageY}px`
+    if (width + event.pageX > window.innerWidth) contextMenu.style.left = `${event.pageX - width}px`
+    else contextMenu.style.left = `${event.pageX}px`
   }
 
   return {
