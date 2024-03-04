@@ -142,4 +142,4 @@ jobs:
           ${{ join(needs.build-images.outputs.*, ' ') }}
 
       - name: Inspect final image
-        run: docker buildx imagetools inspect ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version }}
+        run: docker buildx imagetools inspect ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
