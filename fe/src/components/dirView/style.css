@@ -111,6 +111,11 @@
 .DirView-fileMenu {
   visibility: hidden;
 }
+@media (hover: none) {
+  .DirView-fileMenu {
+    visibility: visible;
+  }
+}
 
 .DirView-fileSize {
   display: flex;
