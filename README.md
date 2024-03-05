@@ -6,7 +6,7 @@ Download the latest binary from [Release Page](https://github.com/whoisnian/shar
 ### Run binary directly
 ```sh
 mkdir ./uploads
-./share-Go -l 0.0.0.0:9000 -p ./uploads
+./share-Go -log nano -l 0.0.0.0:9000 -p ./uploads
 ```
 ### With linux chroot
 ```sh
@@ -18,7 +18,7 @@ tar -xvf alpine-minirootfs-3.18.4-x86_64.tar.gz -C ./share && rm alpine-miniroot
 echo 'nameserver 223.5.5.5' > ./share/etc/resolv.conf
 
 # move share-Go binary into ./share and run
-sudo chroot --userspec=65534:65534 ./share /share-Go -l 0.0.0.0:9000 -p /uploads
+sudo chroot --userspec=65534:65534 ./share /share-Go -log text -l 0.0.0.0:9000 -p /uploads
 ```
 example `/etc/systemd/system/share-Go.service`:
 ```
@@ -31,7 +31,7 @@ Type=simple
 User=root
 Restart=always
 RestartSec=5s
-ExecStart=/usr/bin/chroot --userspec=65534:65534 /root/share /share-Go -l 0.0.0.0:9000 -p /uploads
+ExecStart=/usr/bin/chroot --userspec=65534:65534 /root/share /share-Go -log text -l 0.0.0.0:9000 -p /uploads
 
 [Install]
 WantedBy=multi-user.target
@@ -41,18 +41,19 @@ WantedBy=multi-user.target
 mkdir ./uploads
 docker run -d \
   --name share-go \
-  -e CFG_HTTPLISTENADDR=:9000 \
+  -e CFG_LOGFMT=json \
+  -e CFG_LISTENADDR=:9000 \
   -e CFG_ROOTPATH=/uploads \
   -p 9000:9000 \
   -v $(pwd)/uploads:/uploads \
-  ghcr.io/whoisnian/share-go:v0.0.3
+  ghcr.io/whoisnian/share-go:v0.0.6
 ```
 
 ## Development
 * start backend service:
   ```sh
   mkdir ./uploads
-  go run ./main.go -d # manually rerun after modifying the golang code
+  go run ./main.go -log nano -d # manually rerun after modifying the golang code
   ```
 * start frontend dev server:
   ```sh
