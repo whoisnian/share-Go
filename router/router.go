@@ -66,7 +66,9 @@ func webdavHander(store *httpd.Store) {
 		FileSystem: webdavFS,
 		LockSystem: webdavLS,
 		Logger: func(_ *http.Request, err error) {
-			global.LOG.Error("webdav.ServeHTTP failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+			if err != nil {
+				global.LOG.Error("webdav.ServeHTTP failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+			}
 		},
 	}).ServeHTTP(store.W, store.R)
 }
