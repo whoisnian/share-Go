@@ -220,12 +220,29 @@ func rawHandler(store *httpd.Store) {
 }
 
 func archiveDirAsZip(dirPath string, zipWriter *zip.Writer) error {
-	walkFunc := func(fullPath string, info fs.DirEntry, err error) error {
+	walkFunc := func(fullPath string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+
+		relativePath, err := filepath.Rel(dirPath, fullPath)
+		if err != nil || relativePath == "" || relativePath == "." {
+			return err
+		}
 		if info.IsDir() {
-			return nil
+			// https://unix.stackexchange.com/q/743511
+			// https://github.com/python/cpython/pull/9419
+			fh := &zip.FileHeader{
+				Name:     relativePath,
+				Modified: info.ModTime(),
+				Method:   zip.Store,
+			}
+			fh.SetMode(info.Mode())
+			if fh.Name[len(fh.Name)-1] != '/' {
+				fh.Name += "/"
+			}
+			_, err = zipWriter.CreateHeader(fh)
+			return err
 		}
 
 		file, err := openFile(fullPath)
@@ -234,25 +251,22 @@ func archiveDirAsZip(dirPath string, zipWriter *zip.Writer) error {
 		}
 		defer file.Close()
 
-		relativePath, err := filepath.Rel(dirPath, fullPath)
-		if err != nil {
-			return err
+		fh := &zip.FileHeader{
+			Name:               relativePath,
+			UncompressedSize64: uint64(info.Size()),
+			Modified:           info.ModTime(),
+			Method:             zip.Deflate,
 		}
-		zipFile, err := zipWriter.CreateHeader(&zip.FileHeader{
-			Name:   relativePath,
-			Method: zip.Deflate,
-		})
+		fh.SetMode(info.Mode())
+		zipFile, err := zipWriter.CreateHeader(fh)
 		if err != nil {
 			return err
 		}
 
-		if _, err := io.Copy(zipFile, file); err != nil {
-			return err
-		}
-
-		return nil
+		_, err = io.Copy(zipFile, file)
+		return err
 	}
-	if err := filepath.WalkDir(dirPath, walkFunc); err != nil {
+	if err := filepath.Walk(dirPath, walkFunc); err != nil {
 		return err
 	}
 	return zipWriter.Close()
