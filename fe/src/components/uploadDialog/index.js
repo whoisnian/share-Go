@@ -43,7 +43,7 @@ const createUploadDialog = (parent, base) => {
     uploadButton.textContent = dataTotal ? `${Math.round(100 * dataLoaded / dataTotal)} %` : `Uploading`
     uploadContent.value = `Uploading ${fileIndex + 1} of ${fileTotal} files.`
   }
-  const uploadFiles = (fileList) => {
+  const uploadFilesThenReload = (fileList) => {
     uploadButton.textContent = 'Ready'
     if (fileList && fileList.length === 1) {
       uploadContent.value = fileList[0].name
@@ -60,7 +60,7 @@ const createUploadDialog = (parent, base) => {
   const input = createElement('input', { class: 'UploadDialog-input', type: 'text' })
   const button = createElement('div', { class: 'UploadDialog-button' })
   button.textContent = 'OK'
-  const downloadFiles = () => {
+  const downloadFilesThenReload = () => {
     if (input.value?.length > 0) {
       const urlList = input.value.split(/[,，]/)
       requestDownloadFiles(base, urlList).then(reloadPage).catch(console.error)
@@ -71,7 +71,7 @@ const createUploadDialog = (parent, base) => {
     if (event.target === input && event.key === 'Enter') button.click()
   }
   const removeSelf = (event) => {
-    if (event.target === uploadDialog || event.target === uploadButton || event.target === button) {
+    if (event.target === uploadDialog) {
       document.removeEventListener('click', removeSelf)
       input.removeEventListener('keypress', keyCheck)
       uploadDialog.remove()
@@ -79,13 +79,13 @@ const createUploadDialog = (parent, base) => {
   }
   document.addEventListener('click', removeSelf)
   input.addEventListener('keypress', keyCheck)
-  uploadButton.onclick = (event) => {
-    chooseFile(uploadFiles, true)
-    removeSelf(event)
+  uploadButton.onclick = () => {
+    chooseFile(uploadFilesThenReload, true)
+    document.removeEventListener('click', removeSelf)
   }
-  button.onclick = (event) => {
-    downloadFiles()
-    removeSelf(event)
+  button.onclick = () => {
+    downloadFilesThenReload()
+    document.removeEventListener('click', removeSelf)
   }
 
   fromLocal.tabContent.appendChild(uploadButton)
@@ -104,7 +104,7 @@ const createUploadDialog = (parent, base) => {
 
   return {
     uploadDialog,
-    uploadFiles
+    uploadFilesThenReload
   }
 }
 

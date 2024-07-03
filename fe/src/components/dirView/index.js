@@ -147,8 +147,8 @@ const createDirView = async (oriPath) => {
   // Drag-and-Drop File Uploader
   window.ondragenter = window.ondragover = (e) => e.preventDefault()
   window.ondrop = (e) => {
-    const { uploadFiles } = createUploadDialog(main, joinPath('/', oriPath))
-    uploadFiles(e.dataTransfer.files)
+    const { uploadFilesThenReload } = createUploadDialog(main, joinPath('/', oriPath))
+    uploadFilesThenReload(e.dataTransfer.files)
     e.preventDefault()
   }
 
