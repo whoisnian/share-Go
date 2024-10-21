@@ -2,15 +2,12 @@ package router
 
 import (
 	"context"
-	"log/slog"
 	"net/http"
 	"sync"
 
 	"github.com/whoisnian/glb/httpd"
 	"github.com/whoisnian/glb/tasklane"
-	"github.com/whoisnian/glb/util/strutil"
 	"github.com/whoisnian/share-Go/global"
-	"golang.org/x/net/webdav"
 )
 
 type jsonMap map[string]any
@@ -18,15 +15,11 @@ type jsonMap map[string]any
 var (
 	lockerMap *sync.Map
 	dTaskLane *tasklane.TaskLane
-	webdavFS  webdav.FileSystem
-	webdavLS  webdav.LockSystem
 )
 
 func Setup() *httpd.Mux {
 	lockerMap = new(sync.Map)
 	dTaskLane = tasklane.New(context.Background(), 2, 16)
-	webdavFS = webdav.Dir(global.CFG.RootPath)
-	webdavLS = webdav.NewMemLS()
 
 	mux := httpd.NewMux()
 	mux.HandleRelay(global.LOG.Relay)
@@ -50,27 +43,9 @@ func Setup() *httpd.Mux {
 	muxHandleCheck("/api/rename/*", http.MethodPost, renameHandler, true)
 	muxHandleCheck("/api/upload/*", http.MethodPost, uploadHandler, true)
 
-	mux.Handle("/webdav/*", httpd.MethodAll, webdavHander)
 	mux.Handle("/view/*", http.MethodGet, viewHandler)
 	mux.Handle("/*", http.MethodGet, indexHandler)
 	return mux
-}
-
-func webdavHander(store *httpd.Store) {
-	if global.CFG.ReadOnly && !strutil.SliceContain([]string{"GET", "HEAD", "OPTIONS", "PROPFIND"}, store.R.Method) {
-		readOnlyHander(store)
-		return
-	}
-	(&webdav.Handler{
-		Prefix:     "/webdav",
-		FileSystem: webdavFS,
-		LockSystem: webdavLS,
-		Logger: func(_ *http.Request, err error) {
-			if err != nil {
-				global.LOG.Error("webdav.ServeHTTP failed", slog.Any("error", err), slog.String("tid", store.GetID()))
-			}
-		},
-	}).ServeHTTP(store.W, store.R)
 }
 
 func readOnlyHander(store *httpd.Store) {
