@@ -12,6 +12,8 @@ type Config struct {
 	ReadOnly   bool   `flag:"ro,false,ReadOnly mode"`
 	RootPath   string `flag:"p,uploads,Storage root directory"`
 	ListenAddr string `flag:"l,127.0.0.1:9000,Server listen addr"`
+	TlsCert    string `flag:"cert,,Path to TLS certificate file"`
+	TlsKey     string `flag:"key,,Path to TLS key file"`
 }
 
 func SetupConfig() {

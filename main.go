@@ -24,21 +24,32 @@ func main() {
 		return
 	}
 
+	predictScheme := "http"
+	if global.CFG.TlsCert != "" && global.CFG.TlsKey != "" {
+		predictScheme = "https"
+	}
 	predictAddr := global.CFG.ListenAddr
 	if host, port, err := net.SplitHostPort(global.CFG.ListenAddr); err == nil && (host == "" || host == "0.0.0.0") {
 		if ip, err := netutil.GetOutBoundIP(); err == nil {
 			predictAddr = net.JoinHostPort(ip.String(), port)
 		}
 	}
-	global.LOG.Infof("Try visiting http://%s in your browser.", predictAddr)
+	global.LOG.Infof("Try visiting %s://%s in your browser.", predictScheme, predictAddr)
 
 	server := &http.Server{Addr: global.CFG.ListenAddr, Handler: router.Setup()}
 	go func() {
-		global.LOG.Infof("Service httpd started: <http://%s>", global.CFG.ListenAddr)
-		if err := server.ListenAndServe(); errors.Is(err, http.ErrServerClosed) {
+		var serverErr error
+		if global.CFG.TlsCert != "" && global.CFG.TlsKey != "" {
+			global.LOG.Infof("Service httpd started: <https://%s>", global.CFG.ListenAddr)
+			serverErr = server.ListenAndServeTLS(global.CFG.TlsCert, global.CFG.TlsKey)
+		} else {
+			global.LOG.Infof("Service httpd started: <http://%s>", global.CFG.ListenAddr)
+			serverErr = server.ListenAndServe()
+		}
+		if errors.Is(serverErr, http.ErrServerClosed) {
 			global.LOG.Warn("Service shutting down")
-		} else if err != nil {
-			global.LOG.Fatal(err.Error())
+		} else if serverErr != nil {
+			global.LOG.Fatal(serverErr.Error())
 		}
 	}()
 
