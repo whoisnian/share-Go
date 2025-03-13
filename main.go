@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"runtime"
 	"time"
 
+	"github.com/whoisnian/glb/logger"
 	"github.com/whoisnian/glb/util/netutil"
 	"github.com/whoisnian/glb/util/osutil"
 	"github.com/whoisnian/share-Go/global"
@@ -15,12 +17,13 @@ import (
 )
 
 func main() {
-	global.SetupConfig()
-	global.SetupLogger()
-	global.LOG.Debugf("use config: %+v", global.CFG)
+	ctx := context.Background()
+	global.SetupConfig(ctx)
+	global.SetupLogger(ctx)
+	global.LOG.Debugf(ctx, "use config: %+v", global.CFG)
 
 	if global.CFG.Version {
-		fmt.Printf("%s %s(%s)\n", global.AppName, global.Version, global.BuildTime)
+		fmt.Printf("%s version %s built with %s at %s\n", global.AppName, global.Version, runtime.Version(), global.BuildTime)
 		return
 	}
 
@@ -34,30 +37,30 @@ func main() {
 			predictAddr = net.JoinHostPort(ip.String(), port)
 		}
 	}
-	global.LOG.Infof("Try visiting %s://%s in your browser.", predictScheme, predictAddr)
+	global.LOG.Infof(ctx, "try visiting %s://%s in your browser.", predictScheme, predictAddr)
 
-	server := &http.Server{Addr: global.CFG.ListenAddr, Handler: router.Setup()}
+	server := &http.Server{Addr: global.CFG.ListenAddr, Handler: router.Setup(ctx)}
 	go func() {
 		var serverErr error
 		if global.CFG.TlsCert != "" && global.CFG.TlsKey != "" {
-			global.LOG.Infof("Service httpd started: <https://%s>", global.CFG.ListenAddr)
+			global.LOG.Infof(ctx, "service httpd started: https://%s", global.CFG.ListenAddr)
 			serverErr = server.ListenAndServeTLS(global.CFG.TlsCert, global.CFG.TlsKey)
 		} else {
-			global.LOG.Infof("Service httpd started: <http://%s>", global.CFG.ListenAddr)
+			global.LOG.Infof(ctx, "service httpd started: http://%s", global.CFG.ListenAddr)
 			serverErr = server.ListenAndServe()
 		}
 		if errors.Is(serverErr, http.ErrServerClosed) {
-			global.LOG.Warn("Service shutting down")
+			global.LOG.Warn(ctx, "service shutting down")
 		} else if serverErr != nil {
-			global.LOG.Fatal(serverErr.Error())
+			global.LOG.Fatal(ctx, "service start", logger.Error(serverErr))
 		}
 	}()
 
-	osutil.WaitForInterrupt()
+	osutil.WaitForStop()
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	shutdownCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		global.LOG.Warn(err.Error())
+		global.LOG.Warn(ctx, "service stop", logger.Error(err))
 	}
 }

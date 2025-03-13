@@ -1,8 +1,7 @@
-package router
+package page
 
 import (
 	"io"
-	"log/slog"
 	"mime"
 	"net/http"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/whoisnian/glb/httpd"
+	"github.com/whoisnian/glb/logger"
 	fe "github.com/whoisnian/share-Go/fe/dist"
 	"github.com/whoisnian/share-Go/global"
 )
@@ -22,7 +22,7 @@ func serveFileFromFE(store *httpd.Store, path string) {
 			store.W.WriteHeader(http.StatusNotFound)
 			return
 		}
-		global.LOG.Error("serveFileFromFE failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error(store.R.Context(), "serveFileFromFE failed", logger.Error(err))
 		store.W.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -49,17 +49,17 @@ func serveFileFromFE(store *httpd.Store, path string) {
 		store.W.Header().Set("content-length", strconv.FormatInt(info.Size(), 10))
 	}
 	if _, err := io.CopyN(store.W, file, info.Size()); err != nil {
-		global.LOG.Error("io.CopyN failed", slog.Any("error", err), slog.String("tid", store.GetID()))
+		global.LOG.Error(store.R.Context(), "io.CopyN failed", logger.Error(err))
 		store.W.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
 
-func viewHandler(store *httpd.Store) {
+func ViewHandler(store *httpd.Store) {
 	serveFileFromFE(store, "static/index.html")
 }
 
-func indexHandler(store *httpd.Store) {
+func IndexHandler(store *httpd.Store) {
 	path := store.RouteParamAny()
 	if path == "" {
 		store.Redirect("/view/", http.StatusFound)

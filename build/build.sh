@@ -21,8 +21,9 @@ else
 fi
 
 goBuild() {
-  CGO_ENABLED=0 GOOS="$1" GOARCH="$2" go build -trimpath \
-    -ldflags="-s -w \
+  CGO_ENABLED=0 GOOS="$1" GOARCH="$2" go build \
+    -trimpath -ldflags="-s -w \
+    -X '${MODULE_NAME}/global.ModName=${MODULE_NAME}' \
     -X '${MODULE_NAME}/global.AppName=${APP_NAME}' \
     -X '${MODULE_NAME}/global.Version=${VERSION}' \
     -X '${MODULE_NAME}/global.BuildTime=${BUILDTIME}'" \
