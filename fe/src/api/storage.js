@@ -53,7 +53,7 @@ const requestCreateFiles = async (path, files, updateProgress) => {
       const xhr = new XMLHttpRequest()
       xhr.withCredentials = true
       xhr.onload = () => {
-        if (200 <= xhr.status && xhr.status < 300) resolve(xhr.response)
+        if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.response)
         else reject(xhr.status)
       }
       xhr.onerror = () => reject(xhr.status)

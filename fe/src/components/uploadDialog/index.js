@@ -40,7 +40,7 @@ const createUploadDialog = (parent, base) => {
   uploadButton.textContent = 'Browse'
   const uploadContent = createElement('input', { class: 'UploadDialog-input', type: 'text', readonly: true })
   const updateProgress = (fileIndex, fileTotal, dataLoaded, dataTotal) => {
-    uploadButton.textContent = dataTotal ? `${Math.round(100 * dataLoaded / dataTotal)} %` : `Uploading`
+    uploadButton.textContent = dataTotal ? `${Math.round(100 * dataLoaded / dataTotal)} %` : 'Uploading'
     uploadContent.value = `Uploading ${fileIndex + 1} of ${fileTotal} files.`
   }
   const uploadFilesThenReload = (fileList) => {

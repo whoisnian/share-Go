@@ -10,7 +10,7 @@ const fromOutput = (...args) => resolve(PATH_OUTPUT, ...args)
  * @param { string } src
  * @param { string } dest
  */
- const copyRecursivelySync = (src, dest) => {
+const copyRecursivelySync = (src, dest) => {
   if (!src || !dest || !existsSync(src)) return
 
   const fileStat = lstatSync(src)

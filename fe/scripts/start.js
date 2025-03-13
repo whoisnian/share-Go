@@ -36,7 +36,7 @@ const runMain = async () => {
 
   createServer((req, res) => {
     if (req.url === '/') {
-      res.writeHead(302, { 'location': '/view/' })
+      res.writeHead(302, { location: '/view/' })
       res.end()
       return
     }
