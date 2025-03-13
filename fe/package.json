@@ -5,17 +5,15 @@
   "scripts": {
     "start": "NODE_ENV=development node ./scripts/start.js",
     "build": "rm -rf ./dist && NODE_ENV=production node ./scripts/build.js",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "test": "NODE_ENV=test node ./scripts/test.js"
   },
   "author": "whoisnian",
   "license": "MIT",
   "devDependencies": {
-    "esbuild": "^0.23.0",
-    "standard": "^17.1.0"
-  },
-  "standard": {
-    "globals": [
-      "__PACKAGE_VERSION__"
-    ]
+    "esbuild": "^0.25.1",
+    "eslint": "^9.22.0",
+    "neostandard": "^0.12.1"
   }
 }

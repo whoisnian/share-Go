@@ -31,7 +31,7 @@ const generateHtmlFromTemplate = ({ stylesheetList, scriptList }) => {
 /** @param { string } base */
 const htmlTemplatePlugin = (base) => ({
   name: 'htmlTemplatePlugin',
-  setup(build) {
+  setup (build) {
     const buildOptions = build.initialOptions
     const cwd = process.cwd()
     build.onEnd(result => {
@@ -57,7 +57,7 @@ const htmlTemplatePlugin = (base) => ({
  */
 const copyPlugin = (src, dest) => ({
   name: 'copyPlugin',
-  setup(build) {
+  setup (build) {
     build.onStart(() => {
       if (!src || !dest) throw new Error('SOURCE or DEST must not be blank')
       if (!existsSync(src)) throw new Error(`SOURCE '${src}' not exists`)
