@@ -1,6 +1,7 @@
 package global
 
 import (
+	"context"
 	"os"
 
 	"github.com/whoisnian/glb/ansi"
@@ -9,10 +10,16 @@ import (
 
 var LOG *logger.Logger
 
-func SetupLogger() {
-	opts := logger.NewOptions(logger.LevelInfo, false, false)
+func SetupLogger(_ context.Context) {
+	opts := logger.Options{
+		Level:     logger.LevelInfo,
+		Colorful:  false,
+		AddSource: false,
+	}
 	if CFG.Debug {
-		opts = logger.NewOptions(logger.LevelDebug, ansi.IsSupported(os.Stderr.Fd()), true)
+		opts.Level = logger.LevelDebug
+		opts.Colorful = ansi.IsSupported(os.Stderr.Fd())
+		opts.AddSource = true
 	}
 
 	switch CFG.LogFmt {
