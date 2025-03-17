@@ -195,7 +195,7 @@ func UploadHandler(store *httpd.Store) {
 				store.W.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			global.LOG.Infof(store.R.Context(), "new download task(%s, %s, %s) pushed", task.tid, task.url, task.dir)
+			global.LOG.Infof(store.R.Context(), "task(%s) pushed with %s %s", task.tid, task.url, task.dir)
 		} else if part.FormName() == "fileList" {
 			if err := writeNewFile(filepath.Join(fpath, part.FileName()), part); err != nil {
 				global.LOG.Error(store.R.Context(), "writeNewFile failed", logger.Error(err))

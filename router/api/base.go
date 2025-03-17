@@ -2,15 +2,12 @@ package api
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base32"
+	"errors"
 	"io"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
-	"sync/atomic"
 
 	"github.com/whoisnian/glb/tasklane"
 	"github.com/whoisnian/glb/util/osutil"
@@ -19,26 +16,23 @@ import (
 
 var (
 	_taskLane *tasklane.TaskLane
-	_taskSeq  *atomic.Uint64
-	_laneMark string
+	_taskSeq  *tasklane.Sequence
 )
 
 func Setup(ctx context.Context) {
 	info, err := os.Stat(global.CFG.RootPath)
-	if err != nil && os.IsNotExist(err) {
-		err = os.MkdirAll(global.CFG.RootPath, osutil.DefaultDirMode)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(global.CFG.RootPath, osutil.DefaultDirMode)
+		}
+	} else if !info.IsDir() {
+		err = errors.New("root path is not a directory")
 	}
 	if err != nil {
 		panic(err)
 	}
-	if !info.IsDir() {
-		panic("root path is not a directory")
-	}
 	_taskLane = tasklane.New(ctx, 2, 16)
-	_taskSeq = new(atomic.Uint64)
-	buf := make([]byte, 5)
-	rand.Read(buf)
-	_laneMark = base32.StdEncoding.EncodeToString(buf) + "-"
+	_taskSeq = tasklane.NewSequence(8)
 }
 
 func writeNewFile(name string, src io.Reader) error {
@@ -65,26 +59,26 @@ type downloadTask struct {
 
 func newDownloadTask(url string, dir string) *downloadTask {
 	return &downloadTask{
-		tid: _laneMark + strconv.FormatUint(_taskSeq.Add(1), 10),
+		tid: string(_taskSeq.Next()),
 		url: url,
 		dir: dir,
 	}
 }
 
-func (t *downloadTask) Start() {
-	global.LOG.Infof(context.TODO(), "task(%s) start download %s", t.tid, t.url)
+func (t *downloadTask) Start(ctx context.Context) {
+	global.LOG.Infof(ctx, "task(%s) start download %s", t.tid, t.url)
 	resp, err := http.Get(t.url)
 	if err != nil {
-		global.LOG.Errorf(context.TODO(), "task(%s) download failed: %v", t.tid, err)
+		global.LOG.Errorf(ctx, "task(%s) download failed: %v", t.tid, err)
 		return
 	}
 	defer resp.Body.Close()
 	fpath := filepath.Join(t.dir, path.Base(t.url))
 	if err := writeNewFile(fpath, resp.Body); err != nil {
-		global.LOG.Errorf(context.TODO(), "task(%s) writeNewFile failed: %v", t.tid, err)
+		global.LOG.Errorf(ctx, "task(%s) writeNewFile failed: %v", t.tid, err)
 		return
 	}
-	global.LOG.Infof(context.TODO(), "task(%s) save as %s done", t.tid, fpath)
+	global.LOG.Infof(ctx, "task(%s) save as %s done", t.tid, fpath)
 }
 
 type respMessage struct {
