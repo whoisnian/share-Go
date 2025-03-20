@@ -1,9 +1,9 @@
-const { createServer, request: httpRequest } = require('http')
-const { request: httpsRequest } = require('https')
-const { context } = require('esbuild')
-const { generateHtmlFromTemplate, copyPlugin } = require('./plugin')
-const { fromRoot, fromOutput } = require('./function')
-const { buildConfig } = require('./esbuild.config')
+import { createServer, request as httpRequest } from 'http'
+import { request as httpsRequest } from 'https'
+import { context } from 'esbuild'
+import { generateHtmlFromTemplate, copyPlugin } from './plugin.js'
+import { fromRoot, fromOutput } from './function.js'
+import { buildConfig } from './esbuild.config.js'
 
 const request = (url, ...extraParams) => {
   return url.startsWith('https')
@@ -27,7 +27,7 @@ const proxyTransform = (url) => {
 
 const runMain = async () => {
   const ctx = await context({
-    ...buildConfig,
+    ...buildConfig(),
     write: false,
     sourcemap: true,
     entryNames: '[name]',

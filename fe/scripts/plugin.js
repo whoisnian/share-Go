@@ -1,6 +1,6 @@
-const { writeFileSync, existsSync } = require('fs')
-const { join, relative, extname } = require('path')
-const { copyRecursivelySync } = require('./function')
+import { writeFileSync, existsSync } from 'fs'
+import { join, relative, extname } from 'path'
+import { copyRecursivelySync } from './function.js'
 
 /** @param {{ stylesheetList: string[], scriptList: string[] }} */
 const generateHtmlFromTemplate = ({ stylesheetList, scriptList }) => {
@@ -67,7 +67,7 @@ const copyPlugin = (src, dest) => ({
   }
 })
 
-module.exports = {
+export {
   generateHtmlFromTemplate,
   htmlTemplatePlugin,
   copyPlugin

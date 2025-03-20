@@ -1,10 +1,11 @@
-const { htmlTemplatePlugin, copyPlugin } = require('./plugin')
-const { fromRoot, fromOutput } = require('./function')
-const { version } = require('../package.json')
+import { htmlTemplatePlugin, copyPlugin } from './plugin.js'
+import { fromRoot, fromOutput } from './function.js'
+import packageJson from '../package.json' with { type: 'json' }
 
+const { version } = packageJson
 const isProduction = process.env.NODE_ENV === 'production'
 
-module.exports.buildConfig = {
+const buildConfig = () => ({
   platform: 'browser',
   bundle: true,
   minify: isProduction,
@@ -21,4 +22,8 @@ module.exports.buildConfig = {
     htmlTemplatePlugin(fromOutput()),
     copyPlugin(fromRoot('public'), fromOutput())
   ]
+})
+
+export {
+  buildConfig
 }
