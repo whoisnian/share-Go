@@ -1,7 +1,9 @@
 {
   "name": "share-fe",
   "version": "0.1.7",
-  "description": "",
+  "description": "frontend of share-Go",
+  "author": "whoisnian",
+  "license": "MIT",
   "scripts": {
     "start": "NODE_ENV=development node ./scripts/start.js",
     "build": "rm -rf ./dist && NODE_ENV=production node ./scripts/build.js",
@@ -9,11 +11,14 @@
     "lint:fix": "eslint --fix",
     "test": "NODE_ENV=test node ./scripts/test.js"
   },
-  "author": "whoisnian",
-  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20.18.0"
+  },
   "devDependencies": {
     "esbuild": "^0.25.1",
     "eslint": "^9.22.0",
+    "globals": "^16.0.0",
     "neostandard": "^0.12.1"
   }
 }
