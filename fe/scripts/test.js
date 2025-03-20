@@ -1,16 +1,16 @@
-const { readdirSync } = require('fs')
-const { resolve } = require('path')
-const { spawnSync } = require('child_process')
-const { buildSync } = require('esbuild')
-const { fromRoot } = require('./function')
-const { buildConfig } = require('./esbuild.config')
+import { readdirSync } from 'fs'
+import { resolve } from 'path'
+import { spawnSync } from 'child_process'
+import { buildSync } from 'esbuild'
+import { fromRoot } from './function.js'
+import { buildConfig } from './esbuild.config.js'
 
 const execNode = (code) => spawnSync('node', ['--enable-source-maps'], { cwd: fromRoot(), input: code })
 
 const runTest = (path) => {
   if (path.endsWith('.test.js')) {
     const buildRes = buildSync({
-      ...buildConfig,
+      ...buildConfig(),
       platform: 'node',
       entryPoints: [path],
       outdir: undefined,

@@ -1,8 +1,8 @@
-const { copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync } = require('fs')
-const { resolve, join } = require('path')
+import { copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync } from 'fs'
+import { resolve, join } from 'path'
 
-const PATH_ROOT = resolve(__dirname, '..')
-const PATH_OUTPUT = resolve(__dirname, '../dist')
+const PATH_ROOT = resolve(import.meta.dirname, '..')
+const PATH_OUTPUT = resolve(import.meta.dirname, '../dist')
 const fromRoot = (...args) => resolve(PATH_ROOT, ...args)
 const fromOutput = (...args) => resolve(PATH_OUTPUT, ...args)
 
@@ -25,7 +25,7 @@ const copyRecursivelySync = (src, dest) => {
   }
 }
 
-module.exports = {
+export {
   fromRoot,
   fromOutput,
   copyRecursivelySync
