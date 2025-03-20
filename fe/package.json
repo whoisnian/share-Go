@@ -9,7 +9,7 @@
     "build": "rm -rf ./dist && NODE_ENV=production node ./scripts/build.js",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "test": "NODE_ENV=test node ./scripts/test.js"
+    "test": "NODE_ENV=test node --test"
   },
   "type": "module",
   "engines": {
