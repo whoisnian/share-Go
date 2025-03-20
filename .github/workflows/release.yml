@@ -14,6 +14,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          check-latest: true
           cache: "npm"
           cache-dependency-path: fe/package-lock.json
 
@@ -36,7 +37,7 @@ jobs:
         run: bash -ex ./build/build.sh all
 
       - name: Upload release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: output/*
           generate_release_notes: true
