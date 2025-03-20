@@ -41,9 +41,9 @@ WantedBy=multi-user.target
 mkdir ./uploads
 docker run -d \
   --name share-go \
-  -e CFG_LOGFMT=json \
-  -e CFG_LISTENADDR=:9000 \
-  -e CFG_ROOTPATH=/uploads \
+  -e CFG_LOG_FMT=json \
+  -e CFG_LISTEN_ADDR=:9000 \
+  -e CFG_ROOT_PATH=/uploads \
   -p 9000:9000 \
   -v $(pwd)/uploads:/uploads \
   ghcr.io/whoisnian/share-go:v0.0.10
