@@ -1,11 +1,8 @@
+import test from 'node:test'
 import { strictEqual } from 'assert'
-import { joinPath } from 'utils/function'
+import { joinPath } from './function.js'
 
-const testJoinPath = () => {
-  console.log('testJoinPath start:')
-  let cnt = 0
-  let ecnt = 0
-
+test('test joinPath', async (t) => {
   const tests = [
     [['a', 'b', 'c'], 'a/b/c'],
     [['/a', 'b/c'], '/a/b/c'],
@@ -16,26 +13,9 @@ const testJoinPath = () => {
     [['/a/b', '../../../..'], '/']
   ]
 
-  tests.forEach(([input, output], index) => {
-    cnt++
-    try {
-      const actual = joinPath(...input)
-      strictEqual(actual, output, `    Expected '${output}' but get '${actual}'.`)
-      console.log(`  ${index} \x1b[1;32mok\x1b[0m`)
-    } catch (e) {
-      ecnt++
-      console.log(`  ${index} \x1b[1;31merror\x1b[0m`)
-      console.log(e.message)
-    }
-  })
-  console.log(`testJoinPath end: run ${cnt} tests, ` +
-    (ecnt === 0
-      ? `\x1b[1;32m${cnt - ecnt} ok\x1b[0m and no error.`
-      : `${cnt - ecnt} ok and \x1b[1;31m${ecnt} error\x1b[0m.`))
-}
-
-const runMain = () => {
-  testJoinPath()
-}
-
-runMain()
+  for (let i = 0; i < tests.length; i++) {
+    const [input, output] = tests[i]
+    const actual = joinPath(...input)
+    await t.test(`subtest ${i}`, () => { strictEqual(actual, output) })
+  }
+})
