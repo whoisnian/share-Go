@@ -3,5 +3,7 @@
   "LogFmt": "text",
   "ReadOnly": false,
   "RootPath": "uploads",
-  "ListenAddr": "127.0.0.1:9000"
+  "ListenAddr": "127.0.0.1:9000",
+  "TlsCert": "",
+  "TlsKey": ""
 }
