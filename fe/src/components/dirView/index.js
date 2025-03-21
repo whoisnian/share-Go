@@ -187,7 +187,15 @@ const createDirView = async (oriPath) => {
       requestDeleteRecursively(joinPath(oriPath, encodeURIComponent(data.Name)))
       let item = event.target
       while (item.parentElement && (item.className !== 'DirView-fileInfo' || item.id !== data.Name)) item = item.parentElement
-      if (item.className === 'DirView-fileInfo' && item.id === data.Name) item.remove()
+      if (item.className === 'DirView-fileInfo' && item.id === data.Name) {
+        if (item.nextElementSibling === null && item.previousElementSibling?.className !== 'DirView-fileInfo') {
+          const emptyItem = createElement('div', { class: 'DirView-fileInfo' })
+          emptyItem.textContent = 'Sorry, this is an empty folder.'
+          item.replaceWith(emptyItem)
+        } else {
+          item.remove()
+        }
+      }
     }
   }])
   main.appendChild(fileMenu)
