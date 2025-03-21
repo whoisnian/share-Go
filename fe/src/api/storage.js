@@ -35,8 +35,20 @@ const requestListDir = async (path) => {
  */
 const requestRenameFile = async (from, to) => {
   /** @type {{ ok: boolean, status: number, content: { Message: string } }} */
-  const result = await fetchPostJSONWithStatus(`/api/rename${from}?${new URLSearchParams({ to })}`, {})
+  const result = await fetchPostJSONWithStatus(`/api/rename${from}?${new URLSearchParams({ to })}`)
   return result
+}
+
+/**
+ * @param { string } path
+ * @param { string } content
+ */
+const requestCreateFile = async (path, content) => {
+  await window.fetch(`/api/file${path}`, {
+    credentials: 'same-origin',
+    method: 'POST',
+    body: content
+  })
 }
 
 /**
@@ -44,7 +56,7 @@ const requestRenameFile = async (from, to) => {
  * @param { FileList } files
  * @param { Function } updateProgress
  */
-const requestCreateFiles = async (path, files, updateProgress) => {
+const requestUploadFiles = async (path, files, updateProgress) => {
   for (let i = 0; i < files.length; i++) {
     const formData = new FormData()
     formData.append('fileList', files[i])
@@ -101,7 +113,8 @@ export {
   requestFileInfo,
   requestListDir,
   requestRenameFile,
-  requestCreateFiles,
+  requestCreateFile,
+  requestUploadFiles,
   requestDownloadFiles,
   requestCreateDir,
   requestDeleteRecursively

@@ -1,6 +1,6 @@
 import { createElement, chooseFile } from 'utils/element'
-import { requestCreateFiles, requestDownloadFiles } from 'api/storage'
-import { reloadPage } from 'utils/function'
+import { requestCreateFile, requestUploadFiles, requestDownloadFiles } from 'api/storage'
+import { joinPath, reloadPage } from 'utils/function'
 import './style.css'
 
 /**
@@ -11,7 +11,7 @@ const createUploadDialog = (parent, base) => {
   const uploadDialog = createElement('div', { class: 'UploadDialog-modal' })
   const popup = createElement('div', { class: 'UploadDialog-popup' })
   const header = createElement('div', { class: 'UploadDialog-header' })
-  header.textContent = 'Upload:'
+  header.textContent = 'Upload From:'
 
   const tabList = []
   const tab = createElement('div', { class: 'UploadDialog-tab' })
@@ -33,68 +33,102 @@ const createUploadDialog = (parent, base) => {
   }
 
   // 从本地选择文件上传
-  const fromLocal = createElement('div', { class: 'UploadDialog-tabItem' })
-  fromLocal.textContent = 'From Local'
-  fromLocal.tabContent = createElement('div', { class: 'UploadDialog-tabContent' })
-  const uploadButton = createElement('label', { class: 'UploadDialog-button' })
-  uploadButton.textContent = 'Browse'
-  const uploadContent = createElement('input', { class: 'UploadDialog-input', type: 'text', readonly: true })
+  const fromFiles = createElement('div', { class: 'UploadDialog-tabItem' })
+  fromFiles.textContent = 'Files'
+  fromFiles.tabContent = createElement('div', { class: 'UploadDialog-tabContent' })
+  const filesButton = createElement('label', { class: 'UploadDialog-button' })
+  filesButton.textContent = 'Browse'
+  const filesContent = createElement('input', { class: 'UploadDialog-input', type: 'text', placeholder: 'No files choosed', readonly: true })
   const updateProgress = (fileIndex, fileTotal, dataLoaded, dataTotal) => {
-    uploadButton.textContent = dataTotal ? `${Math.round(100 * dataLoaded / dataTotal)} %` : 'Uploading'
-    uploadContent.value = `Uploading ${fileIndex + 1} of ${fileTotal} files.`
+    filesButton.textContent = dataTotal ? `${Math.round(100 * dataLoaded / dataTotal)} %` : 'Uploading'
+    filesContent.value = `Uploading ${fileIndex + 1} of ${fileTotal} files.`
   }
   const uploadFilesThenReload = (fileList) => {
-    uploadButton.textContent = 'Ready'
+    filesButton.textContent = 'Ready'
     if (fileList && fileList.length === 1) {
-      uploadContent.value = fileList[0].name
+      filesContent.value = fileList[0].name
     } else if (fileList && fileList.length > 1) {
-      uploadContent.value = `Choosed ${fileList.length} files.`
+      filesContent.value = `Choosed ${fileList.length} files.`
     }
-    requestCreateFiles(base, fileList, updateProgress).then(reloadPage).catch(console.error)
+    requestUploadFiles(base, fileList, updateProgress).then(reloadPage).catch(console.error)
   }
 
   // 输入 url 从远端下载
   const fromUrl = createElement('div', { class: 'UploadDialog-tabItem' })
-  fromUrl.textContent = 'From Url'
+  fromUrl.textContent = 'Url'
   fromUrl.tabContent = createElement('div', { class: 'UploadDialog-tabContent' })
-  const input = createElement('input', { class: 'UploadDialog-input', type: 'text' })
-  const button = createElement('div', { class: 'UploadDialog-button' })
-  button.textContent = 'OK'
+  const urlInput = createElement('input', { class: 'UploadDialog-input', type: 'text', placeholder: 'http(s)://example.com' })
+  const urlButton = createElement('div', { class: 'UploadDialog-button' })
+  urlButton.textContent = 'OK'
   const downloadFilesThenReload = () => {
-    if (input.value?.length > 0) {
-      const urlList = input.value.split(/[,，]/)
+    if (urlInput.value?.length > 0) {
+      const urlList = urlInput.value.split(/[,，]/)
       requestDownloadFiles(base, urlList).then(reloadPage).catch(console.error)
+    } else {
+      console.error('missing url input')
+    }
+  }
+
+  // 输入文本内容上传
+  const fromText = createElement('div', { class: 'UploadDialog-tabItem' })
+  fromText.textContent = 'Text'
+  fromText.tabContent = createElement('div', { class: 'UploadDialog-tabContent', style: 'flex-direction:column;' })
+  const textTitleButtonGroup = createElement('div', { class: 'UploadDialog-group' })
+  const textTitle = createElement('input', { class: 'UploadDialog-input', type: 'text', value: 'untitled.txt' })
+  const textButton = createElement('div', { class: 'UploadDialog-button' })
+  textButton.textContent = 'Upload'
+  const textContent = createElement('textarea', { class: 'UploadDialog-input', resize: 'vertical', rows: 5, placeholder: 'Input text content here...' })
+  const uploadTextThenReload = () => {
+    if (textTitle.value?.length > 0) {
+      const path = joinPath(base, encodeURIComponent(textTitle.value))
+      requestCreateFile(path, textContent.value).then(reloadPage).catch(console.error)
+    } else {
+      console.error('missing text title input')
     }
   }
 
   const keyCheck = (event) => {
-    if (event.target === input && event.key === 'Enter') button.click()
+    if (event.target === urlInput && event.key === 'Enter') urlButton.click()
+    else if ((event.target === textTitle || event.target === textContent) && event.key === 'Enter') textButton.click()
   }
   const removeSelf = (event) => {
     if (event.target === uploadDialog) {
       document.removeEventListener('click', removeSelf)
-      input.removeEventListener('keypress', keyCheck)
+      urlInput.removeEventListener('keypress', keyCheck)
+      textTitle.removeEventListener('keypress', keyCheck)
+      textContent.removeEventListener('keypress', keyCheck)
       uploadDialog.remove()
     }
   }
   document.addEventListener('click', removeSelf)
-  input.addEventListener('keypress', keyCheck)
-  uploadButton.onclick = () => {
+  urlInput.addEventListener('keypress', keyCheck)
+  textTitle.addEventListener('keypress', keyCheck)
+  textContent.addEventListener('keypress', keyCheck)
+  filesButton.onclick = () => {
     chooseFile(uploadFilesThenReload, true)
     document.removeEventListener('click', removeSelf)
   }
-  button.onclick = () => {
+  urlButton.onclick = () => {
     downloadFilesThenReload()
     document.removeEventListener('click', removeSelf)
   }
+  textButton.onclick = () => {
+    uploadTextThenReload()
+    document.removeEventListener('click', removeSelf)
+  }
 
-  fromLocal.tabContent.appendChild(uploadButton)
-  fromLocal.tabContent.appendChild(uploadContent)
-  fromUrl.tabContent.appendChild(input)
-  fromUrl.tabContent.appendChild(button)
-  tab.appendChildWithTabContent(fromLocal)
+  fromFiles.tabContent.appendChild(filesButton)
+  fromFiles.tabContent.appendChild(filesContent)
+  fromUrl.tabContent.appendChild(urlInput)
+  fromUrl.tabContent.appendChild(urlButton)
+  textTitleButtonGroup.appendChild(textTitle)
+  textTitleButtonGroup.appendChild(textButton)
+  fromText.tabContent.appendChild(textTitleButtonGroup)
+  fromText.tabContent.appendChild(textContent)
+  tab.appendChildWithTabContent(fromFiles)
   tab.appendChildWithTabContent(fromUrl)
-  tab.changeTo(fromLocal)
+  tab.appendChildWithTabContent(fromText)
+  tab.changeTo(fromFiles)
 
   popup.appendChild(header)
   popup.appendChild(tab)

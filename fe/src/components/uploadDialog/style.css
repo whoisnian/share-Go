@@ -41,7 +41,7 @@
   font-size: medium;
   cursor: pointer;
   user-select: none;
-  padding: 5px 10px;
+  padding: 5px 15px;
   margin-bottom: -1px;
   border-bottom: 3px solid transparent;
 }
@@ -59,6 +59,12 @@
   display: none;
   margin: 10px 0 20px 0;
   padding: 5px 15px;
+}
+
+.UploadDialog-group {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 10px;
 }
 
 .UploadDialog-input {
