@@ -1,4 +1,5 @@
 import { createElement, chooseFile } from 'utils/element'
+import { createInfoDialog } from 'components/infoDialog'
 import { requestCreateFile, requestUploadFiles, requestDownloadFiles } from 'api/storage'
 import { joinPath, reloadPage } from 'utils/function'
 import './style.css'
@@ -44,13 +45,18 @@ const createUploadDialog = (parent, base) => {
     filesContent.value = `Uploading ${fileIndex + 1} of ${fileTotal} files.`
   }
   const uploadFilesThenReload = (fileList) => {
+    if (fileList?.length <= 0) {
+      return false
+    }
+
     filesButton.textContent = 'Ready'
-    if (fileList && fileList.length === 1) {
+    if (fileList.length === 1) {
       filesContent.value = fileList[0].name
-    } else if (fileList && fileList.length > 1) {
+    } else if (fileList.length > 1) {
       filesContent.value = `Choosed ${fileList.length} files.`
     }
     requestUploadFiles(base, fileList, updateProgress).then(reloadPage).catch(console.error)
+    return true
   }
 
   // 输入 url 从远端下载
@@ -61,12 +67,17 @@ const createUploadDialog = (parent, base) => {
   const urlButton = createElement('div', { class: 'UploadDialog-button' })
   urlButton.textContent = 'OK'
   const downloadFilesThenReload = () => {
-    if (urlInput.value?.length > 0) {
-      const urlList = urlInput.value.split(/[,，]/)
-      requestDownloadFiles(base, urlList).then(reloadPage).catch(console.error)
-    } else {
-      console.error('missing url input')
+    if (urlInput.value?.length <= 0) {
+      createInfoDialog(popup, 'Error', 'missing url input')
+      return false
+    } else if (!urlInput.value.match(/^https?:\/\//)) {
+      createInfoDialog(popup, 'Error', 'invalid url scheme')
+      return false
     }
+
+    const urlList = urlInput.value.split(/[,，]/)
+    requestDownloadFiles(base, urlList).then(reloadPage).catch(console.error)
+    return true
   }
 
   // 输入文本内容上传
@@ -77,19 +88,27 @@ const createUploadDialog = (parent, base) => {
   const textTitle = createElement('input', { class: 'UploadDialog-input', type: 'text', value: 'untitled.txt' })
   const textButton = createElement('div', { class: 'UploadDialog-button' })
   textButton.textContent = 'Upload'
-  const textContent = createElement('textarea', { class: 'UploadDialog-input', resize: 'vertical', rows: 5, placeholder: 'Input text content here...' })
+  const textContent = createElement('textarea', { class: 'UploadDialog-input', style: 'resize:vertical;', rows: 5, placeholder: 'Input text content here...' })
   const uploadTextThenReload = () => {
-    if (textTitle.value?.length > 0) {
-      const path = joinPath(base, encodeURIComponent(textTitle.value))
-      requestCreateFile(path, textContent.value).then(reloadPage).catch(console.error)
-    } else {
-      console.error('missing text title input')
+    if (textTitle.value?.length <= 0) {
+      createInfoDialog(popup, 'Error', 'missing text title')
+      return false
     }
+
+    const filePath = joinPath(base, encodeURIComponent(textTitle.value))
+    requestCreateFile(filePath, textContent.value).then(reloadPage).catch(console.error)
+    return true
   }
 
   const keyCheck = (event) => {
-    if (event.target === urlInput && event.key === 'Enter') urlButton.click()
-    else if ((event.target === textTitle || event.target === textContent) && event.key === 'Enter') textButton.click()
+    event.stopPropagation()
+    if (event.target === urlInput && event.key === 'Enter') {
+      event.target.blur()
+      urlButton.click()
+    } else if ((event.target === textTitle || event.target === textContent) && event.key === 'Enter') {
+      event.target.blur()
+      textButton.click()
+    }
   }
   const removeSelf = (event) => {
     if (event.target === uploadDialog) {
@@ -104,17 +123,15 @@ const createUploadDialog = (parent, base) => {
   urlInput.addEventListener('keypress', keyCheck)
   textTitle.addEventListener('keypress', keyCheck)
   textContent.addEventListener('keypress', keyCheck)
-  filesButton.onclick = () => {
-    chooseFile(uploadFilesThenReload, true)
-    document.removeEventListener('click', removeSelf)
+  filesButton.onclick = async () => {
+    const files = await chooseFile(true)
+    if (uploadFilesThenReload(files)) document.removeEventListener('click', removeSelf)
   }
   urlButton.onclick = () => {
-    downloadFilesThenReload()
-    document.removeEventListener('click', removeSelf)
+    if (downloadFilesThenReload()) document.removeEventListener('click', removeSelf)
   }
   textButton.onclick = () => {
-    uploadTextThenReload()
-    document.removeEventListener('click', removeSelf)
+    if (uploadTextThenReload()) document.removeEventListener('click', removeSelf)
   }
 
   fromFiles.tabContent.appendChild(filesButton)

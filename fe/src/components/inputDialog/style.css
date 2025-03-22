@@ -19,13 +19,14 @@
   border-radius: 6px;
   background-color: #ffffff;
   margin: auto;
-  padding: 20px;
+  padding-top: 20px;
   width: 400px;
 }
 
 .InputDialog-header {
   display: flex;
   font-size: large;
+  margin: 0 20px;
 }
 
 .InputDialog-input {
@@ -35,7 +36,7 @@
   border: 1px solid #e1e4e8;
   border-radius: 3px;
   padding: 5px;
-  margin-top: 15px;
+  margin: 15px 20px 0 20px;
   outline: none;
 }
 
@@ -50,7 +51,7 @@
   background-color: #2ea44f;
   border-radius: 3px;
   padding: 5px 25px;
-  margin-top: 10px;
+  margin: 15px 20px;
   cursor: pointer;
   user-select: none;
 }

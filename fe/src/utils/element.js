@@ -37,13 +37,20 @@ const downloadFile = (url, filename) => {
   link.remove()
 }
 
-const chooseFile = (listener, multiple) => {
+const chooseFile = async (multiple) => {
   const input = createElement('input', { type: 'file', multiple })
-  input.onchange = () => {
-    listener(input.files)
-    input.remove()
-  }
-  input.click()
+  return new Promise((resolve) => {
+    input.oncancel = () => {
+      input.remove()
+      resolve([])
+    }
+    input.onchange = () => {
+      const files = input.files
+      input.remove()
+      resolve(files)
+    }
+    input.click()
+  })
 }
 
 const copyText = (text) => {
