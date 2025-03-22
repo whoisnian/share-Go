@@ -1,6 +1,6 @@
 {
   "name": "share-fe",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "frontend of share-Go",
   "author": "whoisnian",
   "license": "MIT",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "esbuild": "^0.25.1",
-    "eslint": "^9.22.0",
+    "eslint": "^9.23.0",
     "globals": "^16.0.0",
     "neostandard": "^0.12.1"
   }
