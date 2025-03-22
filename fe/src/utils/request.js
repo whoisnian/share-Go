@@ -55,7 +55,7 @@ const fetchGetJSONWithStatus = async (url) => {
   return {
     ok: result.ok,
     status: result.status,
-    content: await result.json()
+    content: result.headers.get('content-type')?.includes('application/json') ? await result.json() : await result.text()
   }
 }
 
@@ -64,7 +64,7 @@ const fetchPostJSONWithStatus = async (url, data) => {
   return {
     ok: result.ok,
     status: result.status,
-    content: await result.json()
+    content: result.headers.get('content-type')?.includes('application/json') ? await result.json() : await result.text()
   }
 }
 
@@ -73,7 +73,7 @@ const fetchDeleteJSONWithStatus = async (url, data) => {
   return {
     ok: result.ok,
     status: result.status,
-    content: await result.json()
+    content: result.headers.get('content-type')?.includes('application/json') ? await result.json() : await result.text()
   }
 }
 
@@ -82,7 +82,7 @@ const fetchPutJSONWithStatus = async (url, data) => {
   return {
     ok: result.ok,
     status: result.status,
-    content: await result.json()
+    content: result.headers.get('content-type')?.includes('application/json') ? await result.json() : await result.text()
   }
 }
 

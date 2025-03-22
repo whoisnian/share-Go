@@ -24,7 +24,7 @@ const createHeader = (oriPath) => {
   const pasteIcon = createIcon('paste', { class: 'DirView-iconButton', title: 'Copy current url' })
   pasteIcon.onclick = () => copyText(window.location.href)
   const folderNewIcon = createIcon('folder-new', { class: 'DirView-iconButton', title: 'Create new folder' })
-  folderNewIcon.onclick = () => createInputDialog(header, 'Folder Name:', 'new folder', (dirName) => requestCreateDir(joinPath('/', oriPath, encodeURIComponent(dirName))).then(reloadPage))
+  folderNewIcon.onclick = () => createInputDialog(header, 'Folder Name:', 'new_folder', (dirName) => requestCreateDir(joinPath('/', oriPath, encodeURIComponent(dirName))).then(reloadPage))
   const fileNewIcon = createIcon('file-new', { class: 'DirView-iconButton', title: 'Create new file' })
   fileNewIcon.onclick = () => createUploadDialog(header, joinPath('/', oriPath))
   const sortIcon = createIcon('sort', { class: 'DirView-iconButton', title: 'Sort by' })

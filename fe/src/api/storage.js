@@ -86,12 +86,12 @@ const requestUploadFiles = async (path, files, updateProgress) => {
  * @param { string } path
  * @param { string[] } urlList
  */
-const requestDownloadFiles = async (path, urlList) => {
+const requestDownloadUrls = (path, urlList) => {
   const formData = new FormData()
   for (let i = 0; i < urlList.length; i++) {
     formData.append('urlList', urlList[i])
   }
-  await window.fetch(`/api/upload${path}`, {
+  return window.fetch(`/api/upload${path}`, {
     credentials: 'same-origin',
     method: 'POST',
     body: formData
@@ -115,7 +115,7 @@ export {
   requestRenameFile,
   requestCreateFile,
   requestUploadFiles,
-  requestDownloadFiles,
+  requestDownloadUrls,
   requestCreateDir,
   requestDeleteRecursively
 }

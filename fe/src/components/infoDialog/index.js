@@ -17,7 +17,7 @@ const createInfoDialog = (parent, title, content) => {
   button.textContent = 'OK'
 
   const keyCheck = (event) => {
-    if (event.key === 'Enter') button.click()
+    if (event.key === 'Enter' && !event.ctrlKey && !event.altKey && !event.shiftKey) button.click()
   }
   const removeSelf = (event) => {
     if (event.target === infoDialog || event.target === button) {

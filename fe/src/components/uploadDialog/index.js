@@ -1,6 +1,6 @@
 import { createElement, chooseFile } from 'utils/element'
 import { createInfoDialog } from 'components/infoDialog'
-import { requestCreateFile, requestUploadFiles, requestDownloadFiles } from 'api/storage'
+import { FileType, requestFileInfo, requestCreateFile, requestUploadFiles, requestDownloadUrls } from 'api/storage'
 import { joinPath, reloadPage } from 'utils/function'
 import './style.css'
 
@@ -66,7 +66,7 @@ const createUploadDialog = (parent, base) => {
   const urlInput = createElement('input', { class: 'UploadDialog-input', type: 'text', placeholder: 'http(s)://example.com' })
   const urlButton = createElement('div', { class: 'UploadDialog-button' })
   urlButton.textContent = 'OK'
-  const downloadFilesThenReload = () => {
+  const downloadUrlsThenReload = () => {
     if (urlInput.value?.length <= 0) {
       createInfoDialog(popup, 'Error', 'missing url input')
       return false
@@ -76,7 +76,7 @@ const createUploadDialog = (parent, base) => {
     }
 
     const urlList = urlInput.value.split(/[,，]/)
-    requestDownloadFiles(base, urlList).then(reloadPage).catch(console.error)
+    requestDownloadUrls(base, urlList).then(reloadPage).catch(console.error)
     return true
   }
 
@@ -89,25 +89,40 @@ const createUploadDialog = (parent, base) => {
   const textButton = createElement('div', { class: 'UploadDialog-button' })
   textButton.textContent = 'Upload'
   const textContent = createElement('textarea', { class: 'UploadDialog-input', style: 'resize:vertical;', rows: 5, placeholder: 'Input text content here...' })
-  const uploadTextThenReload = () => {
+  const uploadTextThenReload = async () => {
     if (textTitle.value?.length <= 0) {
       createInfoDialog(popup, 'Error', 'missing text title')
       return false
     }
 
     const filePath = joinPath(base, encodeURIComponent(textTitle.value))
+    const { ok, content: fileInfo } = await requestFileInfo(filePath)
+    if (ok && fileInfo.Type === FileType.typeDirectory) {
+      createInfoDialog(popup, 'Error', 'conflict with existing directory')
+      return false
+    } else if (ok && fileInfo.Type === FileType.typeRegular && textButton.textContent !== 'Overwrite') {
+      createInfoDialog(popup, 'Error', 'conflict with existing file')
+      textButton.textContent = 'Overwrite'
+      textTitle.addEventListener('input', () => {
+        textButton.textContent = 'Upload'
+      }, { once: true })
+      return false
+    }
+
     requestCreateFile(filePath, textContent.value).then(reloadPage).catch(console.error)
     return true
   }
 
   const keyCheck = (event) => {
-    event.stopPropagation()
-    if (event.target === urlInput && event.key === 'Enter') {
-      event.target.blur()
-      urlButton.click()
-    } else if ((event.target === textTitle || event.target === textContent) && event.key === 'Enter') {
-      event.target.blur()
-      textButton.click()
+    if (event.key === 'Enter' && !event.ctrlKey && !event.altKey && !event.shiftKey) {
+      event.stopPropagation()
+      if (event.target === urlInput) {
+        event.target.blur()
+        urlButton.click()
+      } else if (event.target === textTitle || event.target === textContent) {
+        event.target.blur()
+        textButton.click()
+      }
     }
   }
   const removeSelf = (event) => {
@@ -127,11 +142,11 @@ const createUploadDialog = (parent, base) => {
     const files = await chooseFile(true)
     if (uploadFilesThenReload(files)) document.removeEventListener('click', removeSelf)
   }
-  urlButton.onclick = () => {
-    if (downloadFilesThenReload()) document.removeEventListener('click', removeSelf)
+  urlButton.onclick = async () => {
+    if (downloadUrlsThenReload()) document.removeEventListener('click', removeSelf)
   }
-  textButton.onclick = () => {
-    if (uploadTextThenReload()) document.removeEventListener('click', removeSelf)
+  textButton.onclick = async () => {
+    if (await uploadTextThenReload()) document.removeEventListener('click', removeSelf)
   }
 
   fromFiles.tabContent.appendChild(filesButton)

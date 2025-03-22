@@ -22,7 +22,7 @@ const createInputDialog = (parent, name, preset, listener) => {
   button.textContent = 'OK'
 
   const keyCheck = (event) => {
-    if (event.target === input && event.key === 'Enter') button.click()
+    if (event.target === input && event.key === 'Enter' && !event.ctrlKey && !event.altKey && !event.shiftKey) button.click()
   }
   const removeSelf = (event) => {
     if (event.target === inputDialog || event.target === button) {
