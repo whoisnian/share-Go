@@ -15,6 +15,10 @@ RUN --mount=type=bind,source=go.sum,target=go.sum \
     --mount=type=cache,target=/go/pkg/mod/ \
     go mod download -x
 
+# https://docs.docker.com/build/building/variables/#scoping
+ARG TARGETOS
+ARG TARGETARCH
+
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
 COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build/,id=build-$TARGETARCH \
@@ -27,6 +31,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build/,id=build-$TARGETARCH \
     -X '${MODULE_NAME}/global.BuildTime=${BUILDTIME}'" \
     -o main .
 
+# RedundantTargetPlatform: setting --platform=$TARGETPLATFORM in FROM is the default behavior
 FROM gcr.io/distroless/static-debian12:latest
 COPY --from=build /app/main /main
 ENTRYPOINT ["/main"]
