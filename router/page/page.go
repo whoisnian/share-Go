@@ -62,7 +62,7 @@ func ViewHandler(store *httpd.Store) {
 func IndexHandler(store *httpd.Store) {
 	path := store.RouteParamAny()
 	if path == "" {
-		store.Redirect("/view/", http.StatusFound)
+		store.Redirect(http.StatusFound, "/view/")
 		return
 	}
 

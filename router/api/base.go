@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/whoisnian/glb/logger"
 	"github.com/whoisnian/glb/tasklane"
 	"github.com/whoisnian/glb/util/osutil"
 	"github.com/whoisnian/share-Go/global"
@@ -29,7 +30,7 @@ func Setup(ctx context.Context) {
 		err = errors.New("root path is not a directory")
 	}
 	if err != nil {
-		panic(err)
+		global.LOG.Fatal(ctx, "setup root path", logger.Error(err))
 	}
 	_taskLane = tasklane.New(ctx, 2, 16)
 	_taskSeq = tasklane.NewSequence(8)
