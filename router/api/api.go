@@ -90,7 +90,7 @@ func ListDirHandler(store *httpd.Store) {
 	}
 
 	result := make([]respFileInfo, len(infos))
-	for i := 0; i < len(infos); i++ {
+	for i := range infos {
 		result[i] = prepareRespFileInfo(infos[i])
 	}
 	store.RespondJson(http.StatusOK, respFileInfos{result})
