@@ -46,7 +46,7 @@ docker run -d \
   -e CFG_ROOT_PATH=/uploads \
   -p 9000:9000 \
   -v $(pwd)/uploads:/uploads \
-  ghcr.io/whoisnian/share-go:v0.0.11
+  ghcr.io/whoisnian/share-go:v0.0.12
 ```
 
 ## Development
