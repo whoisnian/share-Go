@@ -225,7 +225,7 @@ func RawHandler(store *httpd.Store) {
 		}
 		defer file.Close()
 
-		http.ServeFile(store.W, store.R, fpath)
+		http.ServeContent(store.W, store.R, info.Name(), info.ModTime(), file)
 	} else {
 		store.W.WriteHeader(http.StatusUnprocessableEntity)
 	}
@@ -309,7 +309,7 @@ func DownloadHandler(store *httpd.Store) {
 		filename := url.PathEscape(filepath.Base(fpath))
 		store.W.Header().Set("content-disposition", "attachment; filename*=UTF-8''"+filename+"; filename=\""+filename+"\"")
 
-		http.ServeFile(store.W, store.R, fpath)
+		http.ServeContent(store.W, store.R, info.Name(), info.ModTime(), file)
 	} else if info.Mode().IsDir() {
 		filename := filepath.Base(fpath)
 		if filename == "/" {
