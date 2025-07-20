@@ -13,8 +13,8 @@ mkdir ./uploads
 mkdir -p ./share/uploads && sudo chown 65534:65534 ./share/uploads
 
 # initialize chroot environment with alpine minirootfs
-wget https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/x86_64/alpine-minirootfs-3.21.3-x86_64.tar.gz
-tar -xvf alpine-minirootfs-3.21.3-x86_64.tar.gz -C ./share && rm alpine-minirootfs-3.21.3-x86_64.tar.gz
+wget https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/x86_64/alpine-minirootfs-3.22.1-x86_64.tar.gz
+tar -xvf alpine-minirootfs-3.22.1-x86_64.tar.gz -C ./share && rm alpine-minirootfs-3.22.1-x86_64.tar.gz
 echo 'nameserver 223.5.5.5' > ./share/etc/resolv.conf
 
 # move share-Go binary into ./share and run
