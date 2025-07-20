@@ -85,6 +85,7 @@
 
 .DirView-fileIcon {
   display: flex;
+  fill: currentColor;
 }
 
 .DirView-fileName {
