@@ -38,6 +38,7 @@
 
 .ContextMenu-itemIcon {
   display: flex;
+  fill: currentColor;
 }
 
 .ContextMenu-itemName {
