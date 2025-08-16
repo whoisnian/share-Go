@@ -308,6 +308,7 @@ func DownloadHandler(store *httpd.Store) {
 
 		filename := url.PathEscape(filepath.Base(fpath))
 		store.W.Header().Set("content-disposition", "attachment; filename*=UTF-8''"+filename+"; filename=\""+filename+"\"")
+		store.W.Header().Set("content-type", "application/octet-stream")
 
 		http.ServeContent(store.W, store.R, info.Name(), info.ModTime(), file)
 	} else if info.Mode().IsDir() {
@@ -317,9 +318,11 @@ func DownloadHandler(store *httpd.Store) {
 		}
 		filename = url.PathEscape(filename)
 		store.W.Header().Set("content-disposition", "attachment; filename*=UTF-8''"+filename+".zip; filename=\""+filename+".zip\"")
+		store.W.Header().Set("content-type", "application/octet-stream")
 		zipWriter := zip.NewWriter(store.W)
 		if err := archiveDirAsZip(fpath, zipWriter); err != nil {
 			store.W.Header().Del("content-disposition")
+			store.W.Header().Del("content-type")
 			global.LOG.Error(store.R.Context(), "archiveDirAsZip failed", logger.Error(err))
 			store.W.WriteHeader(http.StatusInternalServerError)
 			return
