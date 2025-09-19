@@ -1,6 +1,5 @@
-import { writeFileSync, existsSync } from 'fs'
+import { writeFileSync, existsSync, cpSync } from 'fs'
 import { join, relative, extname } from 'path'
-import { copyRecursivelySync } from './function.js'
 
 /** @param {{ stylesheetList: string[], scriptList: string[] }} */
 const generateHtmlFromTemplate = ({ stylesheetList, scriptList }) => {
@@ -62,7 +61,7 @@ const copyPlugin = (src, dest) => ({
       if (!src || !dest) throw new Error('SOURCE or DEST must not be blank')
       if (!existsSync(src)) throw new Error(`SOURCE '${src}' not exists`)
 
-      copyRecursivelySync(src, dest)
+      cpSync(src, dest, { recursive: true })
     })
   }
 })
