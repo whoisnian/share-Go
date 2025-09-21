@@ -19,6 +19,7 @@
     "esbuild": "0.25.10",
     "eslint": "9.36.0",
     "globals": "16.4.0",
+    "http-proxy": "1.18.1",
     "neostandard": "0.12.2"
   }
 }

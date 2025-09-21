@@ -1,4 +1,4 @@
-import { writeFileSync, existsSync, cpSync } from 'fs'
+import { mkdirSync, writeFileSync, existsSync, cpSync } from 'fs'
 import { join, relative, extname } from 'path'
 
 /** @param {{ stylesheetList: string[], scriptList: string[] }} */
@@ -45,6 +45,7 @@ const htmlTemplatePlugin = (base) => ({
         else if (extname(path) === '.js') options.scriptList.push(absoluteLink)
       })
 
+      mkdirSync(buildOptions.outdir, { recursive: true })
       writeFileSync(join(buildOptions.outdir, 'index.html'), generateHtmlFromTemplate(options))
     })
   }
@@ -67,7 +68,6 @@ const copyPlugin = (src, dest) => ({
 })
 
 export {
-  generateHtmlFromTemplate,
   htmlTemplatePlugin,
   copyPlugin
 }

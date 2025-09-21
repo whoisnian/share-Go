@@ -1,28 +1,31 @@
-import { createServer, request as httpRequest } from 'http'
-import { request as httpsRequest } from 'https'
+import { createServer } from 'http'
 import { context } from 'esbuild'
-import { generateHtmlFromTemplate, copyPlugin } from './plugin.js'
-import { fromRoot, fromOutput } from './function.js'
+import httpProxy from 'http-proxy'
+import { fromOutput } from './function.js'
 import { buildConfig } from './esbuild.config.js'
 
-const request = (url, ...extraParams) => {
-  return url.startsWith('https')
-    ? httpsRequest(url, ...extraParams)
-    : httpRequest(url, ...extraParams)
-}
-
-const proxyMap = [
-  ['^/api', 'http://127.0.0.1:9000/api']
+const routes = [
+  ['^/api/', 'http://127.0.0.1:9000'],
+  ['^/view/.*', '/static/index.html']
 ]
 
-const proxyTransform = (url) => {
-  if (!url) return null
-
-  for (const [pattern, upstream] of proxyMap) {
-    const re = new RegExp(pattern)
-    if (re.test(url)) return url.replace(re, upstream)
+const createTransformer = (esbuildUpstream) => {
+  const parsedRoutes = routes.map(([pattern, upstream]) => {
+    const url = new URL(upstream, esbuildUpstream)
+    const target = url.origin
+    const path = (upstream === '' || upstream === target) ? null : url.pathname
+    return [pattern, path, target]
+  })
+  return (req) => {
+    for (const [pattern, path, target] of parsedRoutes) {
+      const regexp = new RegExp(pattern)
+      if (regexp.test(req.url)) {
+        if (path) req.url = req.url.replace(regexp, path)
+        return { req, target }
+      }
+    }
+    return { req, target: esbuildUpstream }
   }
-  return null
 }
 
 const runMain = async () => {
@@ -30,45 +33,35 @@ const runMain = async () => {
     ...buildConfig(),
     write: false,
     sourcemap: true,
-    entryNames: '[name]',
-    plugins: [copyPlugin(fromRoot('public'), fromOutput())]
+    entryNames: '[name]'
   })
   await ctx.watch()
   const { hosts, port } = await ctx.serve({ servedir: fromOutput() })
+  const esbuildUpstream = `http://${hosts[0]}:${port}`
+  const targetTransform = createTransformer(esbuildUpstream)
 
-  createServer((req, res) => {
-    if (req.url === '/') {
-      res.writeHead(302, { location: '/view/' })
-      res.end()
-      console.log(' \x1b[34m[direct]\x1b[0m 302 redirect / to /view/')
+  const proxy = httpProxy.createProxyServer({})
+  const mainServer = createServer((req, res) => {
+    const originalUrl = req.url
+    if (originalUrl === '/') {
+      res.writeHead(302, { location: '/view/' }).end()
+      console.log(' \x1b[34m[direct]\x1b[0m redirect / to /view/')
       return
     }
-    const proxyUrl = proxyTransform(req.url)
-    const proxyReq = request(proxyUrl || `http://${hosts[0]}:${port}${req.url}`, {
-      method: req.method,
-      headers: req.headers
-    }, proxyRes => {
-      if (proxyRes.statusCode === 404 && proxyUrl === null) {
-        res.writeHead(200, { 'content-type': 'text/html' })
-        res.end(generateHtmlFromTemplate({
-          stylesheetList: ['/static/app.css'],
-          scriptList: ['/static/app.js']
-        }))
-        console.log(`\x1b[32m[esbuild]\x1b[0m 200 index ${req.method} ${req.url}`)
-        return
-      }
 
-      res.writeHead(proxyRes.statusCode, proxyRes.headers)
-      proxyRes.pipe(res, { end: true })
-      if (proxyUrl === null) console.log(`\x1b[32m[esbuild]\x1b[0m ${res.statusCode} ok ${req.method} ${req.url}`)
-      else console.log(`  \x1b[35m[proxy]\x1b[0m ${res.statusCode} ok ${req.method} ${proxyUrl}`)
-    }).on('error', err => {
-      res.writeHead(500, { 'content-type': 'text/plain' }).end(err.message)
-      console.error(`  \x1b[31m[error]\x1b[0m 500 error ${req.method} ${proxyUrl || req.url} ${err.message}`)
-    })
-
-    req.pipe(proxyReq, { end: true })
-  }).listen(9100, () => {
+    const { req: proxyReq, target } = targetTransform(req)
+    if (target === esbuildUpstream) console.log(`\x1b[32m[esbuild]\x1b[0m ${req.method} ${originalUrl}${originalUrl !== proxyReq.url ? ` -> ${proxyReq.url}` : ''}`)
+    else console.log(`  \x1b[35m[proxy]\x1b[0m ${req.method} ${originalUrl}${originalUrl !== proxyReq.url ? ` -> ${proxyReq.url}` : ''} to ${target}`)
+    proxy.web(proxyReq, res, { target })
+  })
+  mainServer.on('upgrade', (req, socket, head) => {
+    const originalUrl = req.url
+    const { req: proxyReq, target } = targetTransform(req)
+    if (target === esbuildUpstream) console.log(`\x1b[32m[esbuild]\x1b[0m ${req.method} ${originalUrl}${originalUrl !== proxyReq.url ? ` -> ${proxyReq.url}` : ''}`)
+    else console.log(`  \x1b[35m[proxy]\x1b[0m ${req.method} ${originalUrl}${originalUrl !== proxyReq.url ? ` -> ${proxyReq.url}` : ''} to ${target}`)
+    proxy.ws(proxyReq, socket, head, { target })
+  })
+  mainServer.listen(9100, () => {
     console.log('esbuild dev server started: <http://127.0.0.1:9100>')
   })
 }
