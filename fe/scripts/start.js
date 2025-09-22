@@ -4,27 +4,43 @@ import httpProxy from 'http-proxy'
 import { fromOutput } from './function.js'
 import { buildConfig } from './esbuild.config.js'
 
+const DEV_SERVER_PORT = 9100
+
+// proxy_pass to target like nginx:
+//   If the target is specified without a URI, the URI of the original request will be passed to the target.
+//   If the target is specified with a URI, the request URI matching the pattern will be replaced before being passed to the target.
 const routes = [
+  // [ pattern, target ]
   ['^/api/', 'http://127.0.0.1:9000'],
   ['^/view/.*', '/static/index.html']
 ]
 
-const createTransformer = (esbuildUpstream) => {
-  const parsedRoutes = routes.map(([pattern, upstream]) => {
-    const url = new URL(upstream, esbuildUpstream)
-    const target = url.origin
-    const path = (upstream === '' || upstream === target) ? null : url.pathname
-    return [pattern, path, target]
+const createTransformer = (defaultTarget) => {
+  const parsedRoutes = routes.map(([pattern, target]) => {
+    const url = new URL(target, defaultTarget)
+    const parsedTarget = url.origin
+    const pathname = (target === '' || target === parsedTarget) ? null : url.pathname
+    return [new RegExp(pattern), pathname, parsedTarget]
   })
+  const tagDefault = '\x1b[32m[default]\x1b[0m'
+  const tagProxy = '  \x1b[35m[proxy]\x1b[0m'
+  const result = (req, target, originalUrl) => {
+    console.log(`${target === defaultTarget ? tagDefault : tagProxy} ` +
+      `${req.method} ${originalUrl}` +
+      `${originalUrl !== req.url ? ` -> ${req.url}` : ''}` +
+      `${target === defaultTarget ? '' : ` \x1b[36mto\x1b[0m ${target}`}`
+    )
+    return { req, target }
+  }
   return (req) => {
-    for (const [pattern, path, target] of parsedRoutes) {
-      const regexp = new RegExp(pattern)
+    for (const [regexp, pathname, target] of parsedRoutes) {
       if (regexp.test(req.url)) {
-        if (path) req.url = req.url.replace(regexp, path)
-        return { req, target }
+        const originalUrl = req.url
+        if (pathname) req.url = req.url.replace(regexp, pathname)
+        return result(req, target, originalUrl)
       }
     }
-    return { req, target: esbuildUpstream }
+    return result(req, defaultTarget, req.url)
   }
 }
 
@@ -37,32 +53,33 @@ const runMain = async () => {
   })
   await ctx.watch()
   const { hosts, port } = await ctx.serve({ servedir: fromOutput() })
-  const esbuildUpstream = `http://${hosts[0]}:${port}`
-  const targetTransform = createTransformer(esbuildUpstream)
+  const targetTransform = createTransformer(`http://${hosts[0]}:${port}`)
 
   const proxy = httpProxy.createProxyServer({})
   const mainServer = createServer((req, res) => {
-    const originalUrl = req.url
-    if (originalUrl === '/') {
+    if (req.url === '/') {
       res.writeHead(302, { location: '/view/' }).end()
       console.log(' \x1b[34m[direct]\x1b[0m redirect / to /view/')
       return
     }
-
     const { req: proxyReq, target } = targetTransform(req)
-    if (target === esbuildUpstream) console.log(`\x1b[32m[esbuild]\x1b[0m ${req.method} ${originalUrl}${originalUrl !== proxyReq.url ? ` -> ${proxyReq.url}` : ''}`)
-    else console.log(`  \x1b[35m[proxy]\x1b[0m ${req.method} ${originalUrl}${originalUrl !== proxyReq.url ? ` -> ${proxyReq.url}` : ''} to ${target}`)
     proxy.web(proxyReq, res, { target })
   })
   mainServer.on('upgrade', (req, socket, head) => {
-    const originalUrl = req.url
     const { req: proxyReq, target } = targetTransform(req)
-    if (target === esbuildUpstream) console.log(`\x1b[32m[esbuild]\x1b[0m ${req.method} ${originalUrl}${originalUrl !== proxyReq.url ? ` -> ${proxyReq.url}` : ''}`)
-    else console.log(`  \x1b[35m[proxy]\x1b[0m ${req.method} ${originalUrl}${originalUrl !== proxyReq.url ? ` -> ${proxyReq.url}` : ''} to ${target}`)
     proxy.ws(proxyReq, socket, head, { target })
   })
-  mainServer.listen(9100, () => {
-    console.log('esbuild dev server started: <http://127.0.0.1:9100>')
+  mainServer.listen(DEV_SERVER_PORT, () => {
+    console.log('\x1b[32m>>>\x1b[0m The esbuild server has started serving build results.')
+    console.log('\x1b[32m>>>\x1b[0m Starting the development server as a reverse proxy...\n')
+    for (const host of hosts) {
+      const matches = /(\d+)\.\d+\.\d+\.\d+/.exec(host)
+      if (matches) {
+        if (matches[1] === '127') console.log(` > Local:   http://${matches[0]}:${DEV_SERVER_PORT}`)
+        else console.log(` > Network: http://${matches[0]}:${DEV_SERVER_PORT}`)
+      }
+    }
+    console.log('')
   })
 }
 
