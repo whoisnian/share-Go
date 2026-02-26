@@ -1,7 +1,7 @@
-# syntax=docker.io/docker/dockerfile:1.14
+# syntax=docker.io/docker/dockerfile:1.21
 # https://docs.docker.com/build/dockerfile/frontend/
 
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.25-alpine AS build
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26-alpine AS build
 
 ARG MODULE_NAME
 ARG APP_NAME
@@ -32,6 +32,6 @@ RUN --mount=type=cache,target=/root/.cache/go-build/,id=build-$TARGETARCH \
     -o main .
 
 # RedundantTargetPlatform: setting --platform=$TARGETPLATFORM in FROM is the default behavior
-FROM gcr.io/distroless/static-debian12:latest
+FROM gcr.io/distroless/static-debian13:latest
 COPY --from=build /app/main /main
 ENTRYPOINT ["/main"]
