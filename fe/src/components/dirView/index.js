@@ -79,7 +79,11 @@ const createFileItem = (oriPath, fileInfo) => {
 
   // 文件详情（图标，名称，菜单）
   const detailsItem = createElement('div', { class: 'DirView-fileDetails' })
-  const iconItem = fileInfo.Type === 1 ? createIcon('folder', { class: 'DirView-fileIcon' }) : createMimeIcon(pathExt(fileInfo.Name), { class: 'DirView-fileIcon' })
+  const iconItem = fileInfo.Type === FileType.typeDirectory
+    ? createIcon('folder', { class: 'DirView-fileIcon' })
+    : fileInfo.Type === FileType.typeSymlink
+      ? createIcon('file-export', { class: 'DirView-fileIcon' })
+      : createMimeIcon(pathExt(fileInfo.Name), { class: 'DirView-fileIcon' })
   const nameItem = createElement('span', { class: 'DirView-fileName' })
   const nameLink = createElement('a', {
     class: 'DirView-nameLink',

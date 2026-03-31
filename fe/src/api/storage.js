@@ -3,7 +3,8 @@ import { fetchDeleteHead, fetchGetJSONWithStatus, fetchPostJSONWithStatus, fetch
 /** @enum { number } */
 const FileType = {
   typeRegular: 0,
-  typeDirectory: 1
+  typeDirectory: 1,
+  typeSymlink: 2
 }
 
 /**

@@ -39,6 +39,7 @@ const createIcon = (name, options = {}) => {
   else if (name === 'download') svgElement.innerHTML = '<path d="M9 4v6h1V5h4v5h1V4H9zm-2.207 7L6 11.816 12 18l6-6.184-.793-.816L12 16.367 6.793 11zM5 18v2h14v-2h-1v1H6v-1H5z"/>'
   else if (name === 'edit') svgElement.innerHTML = '<path d="M15.996 4L4.004 15.992H4V20h4.008v-.004L20 8.004l-.002-.002L20 8l-4-4-.002.002L15.996 4m-1.998 3.412l2.59 2.59L9 17.59V16H7V14.41l6.998-6.998M6 15.41V17h2V18.59l-.41.41H6l-1-1v-1.59l1-1"/>'
   else if (name === 'file-new') svgElement.innerHTML = '<path d="M5 4v16h9v-1H6V5h8v4h4v6h1V7.992L15.008 4 15 4.01V4H5zm11 11v2h-2v1h2v2h1v-2h2v-1h-2v-2h-1z"/>'
+  else if (name === 'file-export') svgElement.innerHTML = '<path d="M12 17h5.293L15 19.293l.707.707 3.5-3.5-3.5-3.5-.707.707L17.293 16H12v1zm-6 2V5h8v4h4v5h1V8l-4-4H5v16h9v-1H6z"/>'
   else if (name === 'file') svgElement.innerHTML = '<path d="M5 20V4h10v.01l.008-.01L19 7.992V20H5zm1-1h12V9h-4V5H6v14z"/>'
   else if (name === 'folder-new') svgElement.innerHTML = '<path d="M4 4v16h10v-1H5v-8h3v-.01l.008.01 2-2H19v5h1V6h-6.992l-2-2-.008.01V4H4m13 11v2h-2v1h2v2h1v-2h2v-1h-2v-2h-1"/>'
   else if (name === 'folder-parent') svgElement.innerHTML = '<path d="M4 4v16h9v-1H5v-8h3v-.008l.008.008 2-2H19v4h1V6h-6.992l-2-2-.008.008V4H4zm12.5 8.793l-.707.707L13 16.293l.707.707L16 14.707V20h1v-5.293L19.293 17l.707-.707-2.793-2.793-.707-.707z"/>'
