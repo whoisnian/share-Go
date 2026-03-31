@@ -44,7 +44,7 @@ func NewFileHandler(store *httpd.Store) {
 
 func DeleteFileHandler(store *httpd.Store) {
 	fpath := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
-	info, err := os.Stat(fpath)
+	info, err := os.Lstat(fpath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return
@@ -58,6 +58,9 @@ func DeleteFileHandler(store *httpd.Store) {
 		return
 	}
 	if err := os.Remove(fpath); err != nil {
+		if os.IsNotExist(err) {
+			return
+		}
 		global.LOG.Error(store.R.Context(), "os.Remove failed", logger.Error(err))
 		store.W.WriteHeader(http.StatusInternalServerError)
 		return
@@ -107,14 +110,30 @@ func NewDirHandler(store *httpd.Store) {
 
 func DeleteDirHandler(store *httpd.Store) {
 	fpath := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
-	dirInfo, _ := os.Stat(fpath)
-	rootInfo, _ := os.Stat(global.CFG.RootPath)
-	if os.SameFile(rootInfo, dirInfo) {
+	info, err := os.Lstat(fpath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return
+		}
+		global.LOG.Error(store.R.Context(), "os.Stat failed", logger.Error(err))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	rootInfo, err := os.Stat(global.CFG.RootPath)
+	if err != nil {
+		global.LOG.Error(store.R.Context(), "os.Stat failed", logger.Error(err))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if os.SameFile(rootInfo, info) {
 		store.W.WriteHeader(http.StatusForbidden)
 		return
 	}
 
 	if err := os.RemoveAll(fpath); err != nil {
+		if os.IsNotExist(err) {
+			return
+		}
 		global.LOG.Error(store.R.Context(), "os.RemoveAll failed", logger.Error(err))
 		store.W.WriteHeader(http.StatusInternalServerError)
 		return
@@ -125,7 +144,7 @@ func RenameHandler(store *httpd.Store) {
 	fromPath := fsutil.ResolveUrlPath(global.CFG.RootPath, store.RouteParamAny())
 	toPath := fsutil.ResolveUrlPath(global.CFG.RootPath, store.R.URL.Query().Get("to"))
 
-	fromInfo, err := os.Stat(fromPath)
+	fromInfo, err := os.Lstat(fromPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			store.RespondJson(http.StatusNotFound, respMessage{"source file or folder not found"})
@@ -135,13 +154,18 @@ func RenameHandler(store *httpd.Store) {
 		store.W.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	rootInfo, _ := os.Stat(global.CFG.RootPath)
+	rootInfo, err := os.Stat(global.CFG.RootPath)
+	if err != nil {
+		global.LOG.Error(store.R.Context(), "os.Stat failed", logger.Error(err))
+		store.W.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	if os.SameFile(rootInfo, fromInfo) {
 		store.RespondJson(http.StatusForbidden, respMessage{"forbidden to rename the root folder"})
 		return
 	}
 
-	if _, err := os.Stat(toPath); err == nil {
+	if _, err := os.Lstat(toPath); err == nil {
 		store.RespondJson(http.StatusConflict, respMessage{"destination file or folder already exists"})
 		return
 	}

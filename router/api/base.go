@@ -89,6 +89,7 @@ type respMessage struct {
 const (
 	typeRegular   int64 = 0
 	typeDirectory int64 = 1
+	typeSymlink   int64 = 2
 )
 
 type respFileInfo struct {
@@ -103,9 +104,11 @@ type respFileInfos struct {
 }
 
 func prepareRespFileInfo(info os.FileInfo) respFileInfo {
-	t := typeRegular
-	if info.Mode().IsDir() {
+	t, mode := typeRegular, info.Mode()
+	if mode&os.ModeDir != 0 {
 		t = typeDirectory
+	} else if mode&os.ModeSymlink != 0 {
+		t = typeSymlink
 	}
 	return respFileInfo{
 		Type:  t,
